@@ -70,5 +70,21 @@
     },
     "description": "Plugin is missing a dependency",
     "statusCode": 500
+  },
+  "FW_IMPORT_MISSING_COURSE": {
+    "description": "Course for import is missing course.json",
+    "statusCode": 500
+  },
+  "FW_IMPORT_MISSING_CONFIG": {
+    "description": "Course for import is missing config.json",
+    "statusCode": 500
+  },
+  "FW_IMPORT_MISSING_COURSE_PATH": {
+    "description": "Could not locate src/course or build/course in root of package",
+    "statusCode": 500
+  },
+  "FW_IMPORT_MISSING_PACKAGE": {
+    "description": "Could not locate package.json in root of package",
+    "statusCode": 500
   }
 }
