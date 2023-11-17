@@ -9,7 +9,7 @@
   "repository": "github:adapt-security/adapt-authoring-adaptframework",
   "dependencies": {
     "adapt-authoring-browserslist": "github:adapt-security/adapt-authoring-browserslist",
-    "adapt-authoring-content": "github:adapt-security/adapt-authoring-content",
+    "adapt-authoring-content": "github:chris-steele/adapt-authoring-content#issue/23",
     "adapt-authoring-contentplugin": "github:adapt-security/adapt-authoring-contentplugin",
     "adapt-authoring-courseassets": "github:adapt-security/adapt-authoring-courseassets",
     "adapt-authoring-coursetheme": "github:adapt-security/adapt-authoring-coursetheme",
