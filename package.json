@@ -14,15 +14,15 @@
     "adapt-authoring-courseassets": "github:adapt-security/adapt-authoring-courseassets",
     "adapt-authoring-coursetheme": "github:adapt-security/adapt-authoring-coursetheme",
     "adapt-authoring-spoortracking": "github:adapt-security/adapt-authoring-spoortracking",
-    "adapt-cli": "github:adaptlearning/adapt-cli#v3.0.9",
+    "adapt-cli": "github:adaptlearning/adapt-cli#v3.1.1",
     "adapt-octopus": "github:cgkineo/adapt-octopus",
     "fs-extra": "9.0.1",
+    "glob": "^10.3.10",
     "lodash": "^4.17.21",
-    "semver": "^7.3.2",
+    "semver": "^7.5.2",
     "zipper": "adapt-security/zipper"
   },
   "peerDependencies": {
-    "adapt-authoring-authored": "github:adapt-security/adapt-authoring-authored",
     "adapt-authoring-core": "github:adapt-security/adapt-authoring-core"
   },
   "devDependencies": {
