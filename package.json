@@ -9,6 +9,7 @@
   "repository": "github:adapt-security/adapt-authoring-adaptframework",
   "dependencies": {
     "adapt-authoring-browserslist": "github:adapt-security/adapt-authoring-browserslist",
+    "adapt-authoring-content": "github:adapt-security/adapt-authoring-content",
     "adapt-authoring-contentplugin": "github:adapt-security/adapt-authoring-contentplugin",
     "adapt-authoring-courseassets": "github:adapt-security/adapt-authoring-courseassets",
     "adapt-authoring-coursetheme": "github:adapt-security/adapt-authoring-coursetheme",
@@ -24,7 +25,6 @@
   "peerDependencies": {
     "adapt-authoring-assets": "github:adapt-security/adapt-authoring-assets",
     "adapt-authoring-auth": "github:adapt-security/adapt-authoring-auth",
-    "adapt-authoring-content": "github:adapt-security/adapt-authoring-content",
     "adapt-authoring-core": "github:adapt-security/adapt-authoring-core",
     "adapt-authoring-jsonschema": "github:adapt-security/adapt-authoring-jsonschema",
     "adapt-authoring-mongodb": "github:adapt-security/adapt-authoring-mongodb",
