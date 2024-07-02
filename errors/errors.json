@@ -9,7 +9,7 @@
   "FW_CLI_BUILD_FAILED": {
     "data": {
       "cmd": "The command that caused the error",
-      "message": "A detailed error message passed from adapt-cli"
+      "raw": "The raw error output"
     },
     "description": "Framework build using the adapt-cli failed",
     "statusCode": 500
