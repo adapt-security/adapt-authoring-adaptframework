@@ -15,13 +15,13 @@
     "adapt-authoring-coursetheme": "github:adapt-security/adapt-authoring-coursetheme",
     "adapt-authoring-spoortracking": "github:adapt-security/adapt-authoring-spoortracking",
     "adapt-cli": "github:adaptlearning/adapt-cli#v3.3.1",
-    "adapt-octopus": "github:cgkineo/adapt-octopus",
+    "adapt-octopus": "github:cgkineo/adapt-octopus#v0.1.0",
     "fs-extra": "11.2.0",
     "glob": "^11.0.0",
     "lodash": "^4.17.21",
     "semver": "^7.6.0",
     "upath": "^2.0.1",
-    "zipper": "github:adapt-security/zipper"
+    "zipper": "github:adapt-security/zipper#v1.0.0"
   },
   "devDependencies": {
     "eslint": "^9.11.0",
