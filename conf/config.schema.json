@@ -31,6 +31,12 @@
     "frameworkRepository": {
       "description": "URL of the Adapt framework git repository to install",
       "type": "string"
+    },
+    "importMaxFileSize": {
+      "description": "Maximum file upload size for course imports",
+      "type": "string",
+      "isBytes": true,
+      "default": "500mb"
     }
   }
 }
