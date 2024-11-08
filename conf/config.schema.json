@@ -36,6 +36,8 @@
       "description": "Maximum file upload size for course imports",
       "type": "string",
       "isBytes": true,
+      "isMutable": true,
+      "isPublic": true,
       "default": "500mb"
     }
   }
