@@ -44,6 +44,13 @@
     "description": "An invalid course has been provided",
     "statusCode": 400
   },
+  "FW_IMPORT_INVALID_CONTENT": {
+    "description": "An invalid content item has been found in import data",
+    "statusCode": 400,
+    "data": {
+      "item": "The invalid content item"
+    }
+  },
   "FW_IMPORT_MISSING_PLUGINS": {
     "description": "Course for import uses plugins which are missing from the server",
     "statusCode": 400
