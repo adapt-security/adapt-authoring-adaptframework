@@ -38,7 +38,7 @@
       "isBytes": true,
       "isMutable": true,
       "isPublic": true,
-      "default": "500mb"
+      "default": "1gb"
     }
   }
 }
