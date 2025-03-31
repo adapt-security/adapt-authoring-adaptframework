@@ -75,6 +75,14 @@
     "description": "Installation of the framework failed",
     "statusCode": 500
   },
+  "FW_INVALID_VERSION": {
+    "data": {
+      "name": "Incompatible plugin name",
+      "version": "Incompatible plugin version"
+    },
+    "description": "Invalid version specified",
+    "statusCode": 400
+  },
   "FW_MISSING_PLUGIN_DEP": {
     "data": {
       "name": "Missing plugin name"
