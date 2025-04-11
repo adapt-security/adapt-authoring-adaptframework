@@ -16,6 +16,7 @@
     "adapt-authoring-spoortracking": "github:adapt-security/adapt-authoring-spoortracking",
     "adapt-cli": "github:adaptlearning/adapt-cli#v3.3.1",
     "adapt-octopus": "github:cgkineo/adapt-octopus#v0.1.1",
+    "bytes": "^3.1.2",
     "fs-extra": "11.3.0",
     "glob": "^11.0.0",
     "lodash": "^4.17.21",
