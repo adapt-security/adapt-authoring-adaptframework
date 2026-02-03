@@ -18,7 +18,7 @@
     "adapt-octopus": "github:cgkineo/adapt-octopus#v0.1.1",
     "bytes": "^3.1.2",
     "fs-extra": "11.3.3",
-    "glob": "^11.0.0",
+    "glob": "^13.0.0",
     "lodash": "^4.17.21",
     "semver": "^7.6.0",
     "upath": "^2.0.1",
