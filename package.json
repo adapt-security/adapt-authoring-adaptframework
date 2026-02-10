@@ -1,6 +1,6 @@
 {
   "name": "adapt-authoring-adaptframework",
-  "version": "1.9.3",
+  "version": "1.9.4",
   "description": "Adapt framework integration for the Adapt authoring tool",
   "homepage": "https://github.com/adapt-security/adapt-authoring-adaptframework",
   "license": "GPL-3.0",
@@ -33,14 +33,28 @@
     "adapt-authoring-server": "^1.2.0",
     "adapt-authoring-tags": "^1.0.1"
   },
-    "peerDependenciesMeta": {
-    "adapt-authoring-assets": { "optional": true },
-    "adapt-authoring-auth": { "optional": true },
-    "adapt-authoring-jsonschema": { "optional": true },
-    "adapt-authoring-middleware": { "optional": true },
-    "adapt-authoring-mongodb": { "optional": true },
-    "adapt-authoring-server": { "optional": true },
-    "adapt-authoring-tags": { "optional": true }
+  "peerDependenciesMeta": {
+    "adapt-authoring-assets": {
+      "optional": true
+    },
+    "adapt-authoring-auth": {
+      "optional": true
+    },
+    "adapt-authoring-jsonschema": {
+      "optional": true
+    },
+    "adapt-authoring-middleware": {
+      "optional": true
+    },
+    "adapt-authoring-mongodb": {
+      "optional": true
+    },
+    "adapt-authoring-server": {
+      "optional": true
+    },
+    "adapt-authoring-tags": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@semantic-release/git": "^10.0.1",
