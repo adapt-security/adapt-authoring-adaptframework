@@ -8,14 +8,14 @@
   "main": "index.js",
   "repository": "github:adapt-security/adapt-authoring-adaptframework",
   "dependencies": {
-    "adapt-authoring-browserslist": "github:adapt-security/adapt-authoring-browserslist",
-    "adapt-authoring-content": "github:adapt-security/adapt-authoring-content",
-    "adapt-authoring-contentplugin": "github:adapt-security/adapt-authoring-contentplugin",
-    "adapt-authoring-courseassets": "github:adapt-security/adapt-authoring-courseassets",
-    "adapt-authoring-coursetheme": "github:adapt-security/adapt-authoring-coursetheme",
-    "adapt-authoring-spoortracking": "github:adapt-security/adapt-authoring-spoortracking",
-    "adapt-cli": "github:adaptlearning/adapt-cli#v3.3.1",
-    "adapt-octopus": "github:cgkineo/adapt-octopus#v0.1.1",
+    "adapt-authoring-browserslist": "^1.2.1",
+    "adapt-authoring-content": "^1.2.3",
+    "adapt-authoring-contentplugin": "^1.0.3",
+    "adapt-authoring-courseassets": "^1.0.3",
+    "adapt-authoring-coursetheme": "^1.0.2",
+    "adapt-authoring-spoortracking": "^1.0.2",
+    "adapt-cli": "^3.3.3",
+    "adapt-octopus": "^0.1.2",
     "bytes": "^3.1.2",
     "fs-extra": "11.3.3",
     "glob": "^13.0.0",
@@ -23,6 +23,24 @@
     "semver": "^7.6.0",
     "upath": "^2.0.1",
     "zipper": "github:adapt-security/zipper#v1.1.0"
+  },
+  "peerDependencies": {
+    "adapt-authoring-assets": "^1.3.1",
+    "adapt-authoring-auth": "^1.0.3",
+    "adapt-authoring-jsonschema": "^1.1.5",
+    "adapt-authoring-middleware": "^1.0.1",
+    "adapt-authoring-mongodb": "^1.1.2",
+    "adapt-authoring-server": "^1.2.0",
+    "adapt-authoring-tags": "^1.0.1"
+  },
+    "peerDependenciesMeta": {
+    "adapt-authoring-assets": { "optional": true },
+    "adapt-authoring-auth": { "optional": true },
+    "adapt-authoring-jsonschema": { "optional": true },
+    "adapt-authoring-middleware": { "optional": true },
+    "adapt-authoring-mongodb": { "optional": true },
+    "adapt-authoring-server": { "optional": true },
+    "adapt-authoring-tags": { "optional": true }
   },
   "devDependencies": {
     "@semantic-release/git": "^10.0.1",
@@ -44,14 +62,9 @@
           "preset": "eslint"
         }
       ],
-      [
-        "@semantic-release/git",
-        {
-          "message": "Chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
-        }
-      ],
+      "@semantic-release/npm",
       "@semantic-release/github",
-      "@semantic-release/npm"
+      "@semantic-release/git"
     ]
   }
 }
