@@ -23,7 +23,7 @@
   },
   "FW_IMPORT_CONTENT_FAILED": {
     "data": {
-      "errors": "Accompanying errors"
+      "errors": "Array of accompanying errors, each with either { schemaName, id, errors } or { message }"
     },
     "description": "Import of framework content failed",
     "statusCode": 400
@@ -45,11 +45,17 @@
   },
   "FW_IMPORT_INVALID": {
     "description": "An invalid import zip has been provided",
-    "statusCode": 400
+    "statusCode": 400,
+    "data": {
+      "reason": "The reason the import zip was considered invalid"
+    }
   },
   "FW_IMPORT_INVALID_COURSE": {
     "description": "An invalid course has been provided",
-    "statusCode": 400
+    "statusCode": 400,
+    "data": {
+      "reason": "The reason the course was considered invalid"
+    }
   },
   "FW_IMPORT_INVALID_CONTENT": {
     "description": "An invalid content item has been found in import data",
@@ -57,6 +63,13 @@
     "data": {
       "item": "The invalid content item"
     }
+  },
+  "FW_IMPORT_MIGRATION_FAILED": {
+    "data": {
+      "reason": "The reason the migration failed"
+    },
+    "description": "Migration of course content failed",
+    "statusCode": 500
   },
   "FW_IMPORT_MISSING_PLUGINS": {
     "description": "Course for import uses plugins which are missing from the server",
@@ -78,8 +91,25 @@
     "description": "Plugin is incompatible",
     "statusCode": 500
   },
+  "FW_LATEST_VERSION_FAILED": {
+    "data": {
+      "reason": "The reason the version check failed"
+    },
+    "description": "Failed to retrieve the latest framework version",
+    "statusCode": 500
+  },
   "FW_INSTALL_FAILED": {
+    "data": {
+      "reason": "The reason the installation failed"
+    },
     "description": "Installation of the framework failed",
+    "statusCode": 500
+  },
+  "FW_UPDATE_FAILED": {
+    "data": {
+      "reason": "The reason the update failed"
+    },
+    "description": "Update of the framework failed",
     "statusCode": 500
   },
   "FW_INVALID_VERSION": {
