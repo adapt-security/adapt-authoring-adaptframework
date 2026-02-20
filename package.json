@@ -7,6 +7,9 @@
   "type": "module",
   "main": "index.js",
   "repository": "github:adapt-security/adapt-authoring-adaptframework",
+  "scripts": {
+    "test": "node --test 'tests/**/*.spec.js'"
+  },
   "dependencies": {
     "adapt-authoring-browserslist": "^1.2.1",
     "adapt-authoring-content": "^1.2.3",
