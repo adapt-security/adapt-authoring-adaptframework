@@ -20,11 +20,8 @@ describe('AdaptFrameworkUtils', () => {
       })
     })
 
-    // TODO: inferBuildAction returns truncated result for URLs without a second slash
-    // e.g. '/import' returns 'impor' because indexOf('/', 1) returns -1
-    // causing slice(1, -1) to strip the last character
-    it('should truncate action for URLs without trailing slash/path (known bug)', () => {
-      assert.equal(AdaptFrameworkUtils.inferBuildAction({ url: '/import' }), 'impor')
+    it('should return full action for URLs without trailing slash', () => {
+      assert.equal(AdaptFrameworkUtils.inferBuildAction({ url: '/import' }), 'import')
     })
   })
 
