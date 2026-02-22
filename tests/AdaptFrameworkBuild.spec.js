@@ -1,9 +1,10 @@
-import { describe, it, before, after } from 'node:test'
+import { describe, it, after } from 'node:test'
 import assert from 'node:assert/strict'
 import _ from 'lodash'
 import fs from 'fs/promises'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { ensureDir } from 'adapt-authoring-core'
 import AdaptFrameworkBuild from '../lib/AdaptFrameworkBuild.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -113,26 +114,21 @@ describe('AdaptFrameworkBuild', () => {
     })
   })
 
-  describe('#ensureDir()', () => {
+  describe('ensureDir() (from core)', () => {
     const testDir = path.join(__dirname, 'data', 'ensure-dir-test')
-    let build
-
-    before(() => {
-      build = new AdaptFrameworkBuild({ action: 'preview', courseId: 'c1', userId: 'u1' })
-    })
 
     after(async () => {
       await fs.rm(testDir, { recursive: true, force: true })
     })
 
     it('should create a directory that does not exist', async () => {
-      await build.ensureDir(testDir)
+      await ensureDir(testDir)
       const stat = await fs.stat(testDir)
       assert.ok(stat.isDirectory())
     })
 
     it('should not throw when the directory already exists', async () => {
-      await build.ensureDir(testDir)
+      await ensureDir(testDir)
       const stat = await fs.stat(testDir)
       assert.ok(stat.isDirectory())
     })
