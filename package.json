@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "adapt-authoring-browserslist": "^1.2.1",
-    "adapt-authoring-content": "^1.2.3",
+    "adapt-authoring-content": "^2.0.0",
     "adapt-authoring-contentplugin": "^1.0.3",
     "adapt-authoring-core": "^2.0.0",
     "adapt-authoring-courseassets": "^1.0.3",
@@ -33,8 +33,8 @@
     "adapt-authoring-auth": "^1.0.3",
     "adapt-authoring-jsonschema": "^1.1.5",
     "adapt-authoring-middleware": "^1.0.1",
-    "adapt-authoring-mongodb": "^1.1.2",
-    "adapt-authoring-server": "^1.2.0",
+    "adapt-authoring-mongodb": "^2.0.0",
+    "adapt-authoring-server": "^2.0.0",
     "adapt-authoring-tags": "^1.0.1"
   },
   "peerDependenciesMeta": {
