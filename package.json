@@ -17,6 +17,7 @@
     "adapt-authoring-core": "^2.0.0",
     "adapt-authoring-courseassets": "^1.0.3",
     "adapt-authoring-coursetheme": "^1.0.2",
+    "adapt-authoring-mongodb": "^3.0.0",
     "adapt-authoring-spoortracking": "^1.0.2",
     "adapt-cli": "^3.3.3",
     "adapt-octopus": "^0.1.2",
@@ -33,7 +34,6 @@
     "adapt-authoring-auth": "^2.0.0",
     "adapt-authoring-jsonschema": "^1.1.5",
     "adapt-authoring-middleware": "^1.0.1",
-    "adapt-authoring-mongodb": "^3.0.0",
     "adapt-authoring-server": "^2.0.0",
     "adapt-authoring-tags": "^1.0.1"
   },
