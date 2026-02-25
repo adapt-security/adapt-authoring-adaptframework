@@ -1,6 +1,16 @@
-import { describe, it } from 'node:test'
+import { describe, it, mock } from 'node:test'
 import assert from 'node:assert/strict'
-import AdaptFrameworkImport from '../lib/AdaptFrameworkImport.js'
+
+// Prevent log() from triggering App.instance boot during tests
+mock.module('../lib/utils/log.js', {
+  namedExports: {
+    log: async () => {},
+    logDir: () => {},
+    logMemory: () => {}
+  }
+})
+
+const { default: AdaptFrameworkImport } = await import('../lib/AdaptFrameworkImport.js')
 
 describe('AdaptFrameworkImport', () => {
   describe('.typeToSchema()', () => {
@@ -322,6 +332,260 @@ describe('AdaptFrameworkImport', () => {
       ], 'en/contentObjects.json', ctx)
       assert.equal(ctx.contentJson.contentObjects.page1._type, 'page')
       assert.equal(ctx.contentJson.contentObjects.art1._type, 'article')
+    })
+  })
+
+  describe('#cleanUp()', () => {
+    const cleanUp = AdaptFrameworkImport.prototype.cleanUp
+    const rollback = AdaptFrameworkImport.prototype.rollback
+
+    it('should call rollback when an error is passed', async () => {
+      let rollbackCalled = false
+      const ctx = {
+        settings: { removeSource: false },
+        rollback: async () => { rollbackCalled = true }
+      }
+      await cleanUp.call(ctx, new Error('test'))
+      assert.equal(rollbackCalled, true)
+    })
+
+    it('should not call rollback when no error is passed', async () => {
+      let rollbackCalled = false
+      const ctx = {
+        settings: { removeSource: false },
+        rollback: async () => { rollbackCalled = true }
+      }
+      await cleanUp.call(ctx, undefined)
+      assert.equal(rollbackCalled, false)
+    })
+
+    it('should run rollback even when removeSource is false', async () => {
+      let rollbackCalled = false
+      const ctx = {
+        settings: { removeSource: false },
+        rollback: async () => { rollbackCalled = true }
+      }
+      await cleanUp.call(ctx, new Error('test'))
+      assert.equal(rollbackCalled, true)
+    })
+  })
+
+  describe('#rollback()', () => {
+    const rollback = AdaptFrameworkImport.prototype.rollback
+
+    function makeRollbackCtx (overrides = {}) {
+      return {
+        newContentPlugins: {},
+        updatedContentPlugins: {},
+        assetMap: {},
+        newTagIds: [],
+        contentJson: { course: {} },
+        idMap: {},
+        contentplugin: null,
+        assets: null,
+        content: null,
+        courseassets: null,
+        ...overrides
+      }
+    }
+
+    it('should uninstall newly installed plugins', async () => {
+      const uninstalled = []
+      const ctx = makeRollbackCtx({
+        contentplugin: {
+          uninstallPlugin: async (id) => uninstalled.push(id)
+        },
+        newContentPlugins: {
+          'adapt-contrib-text': { _id: 'p1', name: 'adapt-contrib-text' },
+          'adapt-contrib-gmcq': { _id: 'p2', name: 'adapt-contrib-gmcq' }
+        }
+      })
+      await rollback.call(ctx)
+      assert.deepEqual(uninstalled.sort(), ['p1', 'p2'])
+    })
+
+    it('should delete imported assets', async () => {
+      const deleted = []
+      const ctx = makeRollbackCtx({
+        assets: {
+          delete: async ({ _id }) => deleted.push(_id)
+        },
+        assetMap: {
+          'course/en/assets/logo.png': 'a1',
+          'course/en/assets/bg.jpg': 'a2'
+        }
+      })
+      await rollback.call(ctx)
+      assert.deepEqual(deleted.sort(), ['a1', 'a2'])
+    })
+
+    it('should delete course content and course assets', async () => {
+      const contentDeleted = []
+      const courseAssetsDeleted = []
+      const ctx = makeRollbackCtx({
+        content: {
+          deleteMany: async (query) => contentDeleted.push(query)
+        },
+        courseassets: {
+          deleteMany: async (query) => courseAssetsDeleted.push(query)
+        },
+        contentJson: { course: { _id: 'oldCourseId' } },
+        idMap: { oldCourseId: '507f1f77bcf86cd799439011' }
+      })
+      await rollback.call(ctx)
+      assert.equal(contentDeleted.length, 1)
+      assert.equal(courseAssetsDeleted.length, 1)
+    })
+
+    it('should skip plugin uninstall when contentplugin is not available', async () => {
+      const ctx = makeRollbackCtx({
+        contentplugin: null,
+        newContentPlugins: { 'adapt-contrib-text': { _id: 'p1', name: 'adapt-contrib-text' } }
+      })
+      await rollback.call(ctx) // should not throw
+    })
+
+    it('should skip asset deletion when assets module is not available', async () => {
+      const ctx = makeRollbackCtx({
+        assets: null,
+        assetMap: { 'some/path.png': 'a1' }
+      })
+      await rollback.call(ctx) // should not throw
+    })
+
+    it('should skip content deletion when course ID is not in idMap', async () => {
+      const deleted = []
+      const ctx = makeRollbackCtx({
+        content: {
+          deleteMany: async (query) => deleted.push(query)
+        },
+        courseassets: {
+          deleteMany: async (query) => deleted.push(query)
+        },
+        contentJson: { course: { _id: 'oldCourseId' } },
+        idMap: {} // no mapping exists
+      })
+      await rollback.call(ctx)
+      assert.equal(deleted.length, 0)
+    })
+
+    it('should continue cleaning up when an individual asset deletion fails', async () => {
+      const deleted = []
+      const ctx = makeRollbackCtx({
+        assets: {
+          delete: async ({ _id }) => {
+            if (_id === 'a1') throw new Error('delete failed')
+            deleted.push(_id)
+          }
+        },
+        assetMap: {
+          'path/a.png': 'a1',
+          'path/b.png': 'a2',
+          'path/c.png': 'a3'
+        }
+      })
+      await rollback.call(ctx)
+      assert.deepEqual(deleted.sort(), ['a2', 'a3'])
+    })
+
+    it('should continue cleaning up when an individual plugin uninstall fails', async () => {
+      const uninstalled = []
+      const ctx = makeRollbackCtx({
+        contentplugin: {
+          uninstallPlugin: async (id) => {
+            if (id === 'p1') throw new Error('uninstall failed')
+            uninstalled.push(id)
+          }
+        },
+        newContentPlugins: {
+          'plugin-a': { _id: 'p1', name: 'plugin-a' },
+          'plugin-b': { _id: 'p2', name: 'plugin-b' }
+        }
+      })
+      await rollback.call(ctx)
+      assert.deepEqual(uninstalled, ['p2'])
+    })
+  })
+
+  describe('#importCoursePlugins() - early missing plugin detection', () => {
+    const importCoursePlugins = AdaptFrameworkImport.prototype.importCoursePlugins
+
+    function makePluginCtx (overrides = {}) {
+      return {
+        configEnabledPlugins: [],
+        usedContentPlugins: {},
+        installedPlugins: {},
+        newContentPlugins: {},
+        updatedContentPlugins: {},
+        pluginsToMigrate: ['core'],
+        componentNameMap: {},
+        settings: { isDryRun: false, importPlugins: true, updatePlugins: false },
+        statusReport: { info: [], warn: [], error: [] },
+        contentplugin: {
+          find: async () => []
+        },
+        ...overrides
+      }
+    }
+
+    it('should report missing plugins in statusReport during dry run', async () => {
+      const ctx = makePluginCtx({
+        configEnabledPlugins: ['adapt-contrib-text', 'adapt-contrib-missing'],
+        usedContentPlugins: { 'adapt-contrib-text': { version: '1.0.0' } },
+        settings: { isDryRun: true, importPlugins: true, updatePlugins: false },
+        contentplugin: { find: async () => [] }
+      })
+      await importCoursePlugins.call(ctx)
+      assert.equal(ctx.statusReport.error.length, 1)
+      assert.equal(ctx.statusReport.error[0].code, 'MISSING_PLUGINS')
+      assert.deepEqual(ctx.statusReport.error[0].data, ['adapt-contrib-missing'])
+    })
+
+    it('should not report error when config plugins exist in the import package', async () => {
+      const ctx = makePluginCtx({
+        configEnabledPlugins: ['adapt-contrib-text'],
+        usedContentPlugins: { 'adapt-contrib-text': { name: 'adapt-contrib-text', version: '1.0.0', type: 'component' } },
+        contentplugin: {
+          find: async () => [{ name: 'adapt-contrib-text', version: '1.0.0', targetAttribute: '_text', isLocalInstall: true }]
+        }
+      })
+      await importCoursePlugins.call(ctx)
+      assert.equal(ctx.statusReport.error.length, 0)
+    })
+
+    it('should not report error when config plugins are installed on the server', async () => {
+      const ctx = makePluginCtx({
+        configEnabledPlugins: ['adapt-contrib-text'],
+        usedContentPlugins: {},
+        contentplugin: {
+          find: async () => [{ name: 'adapt-contrib-text', version: '1.0.0', targetAttribute: '_text' }]
+        }
+      })
+      await importCoursePlugins.call(ctx)
+      assert.equal(ctx.statusReport.error.length, 0)
+    })
+
+    it('should not report error when configEnabledPlugins is empty', async () => {
+      const ctx = makePluginCtx({
+        configEnabledPlugins: [],
+        contentplugin: { find: async () => [] }
+      })
+      await importCoursePlugins.call(ctx)
+      assert.equal(ctx.statusReport.error.length, 0)
+    })
+
+    it('should only flag plugins missing from both package and server', async () => {
+      const ctx = makePluginCtx({
+        configEnabledPlugins: ['adapt-contrib-text', 'adapt-contrib-gmcq', 'adapt-contrib-missing'],
+        usedContentPlugins: { 'adapt-contrib-text': { version: '1.0.0' } },
+        settings: { isDryRun: true, importPlugins: true, updatePlugins: false },
+        contentplugin: {
+          find: async () => [{ name: 'adapt-contrib-gmcq', version: '2.0.0', targetAttribute: '_gmcq' }]
+        }
+      })
+      await importCoursePlugins.call(ctx)
+      assert.equal(ctx.statusReport.error.length, 1)
+      assert.deepEqual(ctx.statusReport.error[0].data, ['adapt-contrib-missing'])
     })
   })
 })
