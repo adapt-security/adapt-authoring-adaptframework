@@ -337,7 +337,6 @@ describe('AdaptFrameworkImport', () => {
 
   describe('#cleanUp()', () => {
     const cleanUp = AdaptFrameworkImport.prototype.cleanUp
-    const rollback = AdaptFrameworkImport.prototype.rollback
 
     it('should call rollback when an error is passed', async () => {
       let rollbackCalled = false
