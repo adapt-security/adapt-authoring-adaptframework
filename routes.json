@@ -1,0 +1,216 @@
+{
+  "root": "adapt",
+  "routes": [
+    {
+      "route": "/preview/:id",
+      "handlers": { "post": "postHandler" },
+      "permissions": { "post": ["preview:adapt"] },
+      "meta": {
+        "post": {
+          "summary": "Build a preview of an Adapt course",
+          "responses": {
+            "200": {
+              "description": "The Adapt build data",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#components/schemas/adaptbuild" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "route": "/publish/:id",
+      "handlers": { "post": "postHandler", "get": "getHandler" },
+      "permissions": { "post": ["publish:adapt"], "get": ["publish:adapt"] },
+      "meta": {
+        "post": {
+          "summary": "Create a publish zip of an Adapt course",
+          "responses": {
+            "200": {
+              "description": "The Adapt build data",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#components/schemas/adaptbuild" }
+                }
+              }
+            }
+          }
+        },
+        "get": {
+          "summary": "Retrieve an Adapt course publish zip",
+          "responses": {
+            "200": {
+              "description": "Course build zip file",
+              "content": { "application/zip": {} }
+            }
+          }
+        }
+      }
+    },
+    {
+      "route": "/import",
+      "handlers": { "post": "importHandler" },
+      "permissions": { "post": ["import:adapt"] },
+      "meta": {
+        "post": {
+          "summary": "Import an Adapt course",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "path": { "type": "String" },
+                    "isDryRun": { "type": "Boolean", "default": false },
+                    "importContent": { "type": "Boolean", "default": true },
+                    "importPlugins": { "type": "Boolean", "default": true },
+                    "updatePlugins": { "type": "Boolean", "default": false }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "properties": {
+                      "title": { "type": "string" },
+                      "courseId": { "type": "string" },
+                      "versions": { "type": "object" },
+                      "content": {
+                        "type": "object",
+                        "properties": {
+                          "course": { "type": "number" },
+                          "config": { "type": "number" },
+                          "menu": { "type": "number" },
+                          "page": { "type": "number" },
+                          "article": { "type": "number" },
+                          "block": { "type": "number" },
+                          "component": { "type": "number" }
+                        }
+                      },
+                      "statusReport": {
+                        "type": "object",
+                        "properties": {
+                          "error": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "code": { "type": "string" },
+                                "data": { "type": "string" }
+                              }
+                            }
+                          },
+                          "warn": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "code": { "type": "string" },
+                                "data": { "type": "string" }
+                              }
+                            }
+                          },
+                          "info": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "code": { "type": "string" },
+                                "data": { "type": "string" }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "route": "/export/:id",
+      "handlers": { "post": "postHandler", "get": "getHandler" },
+      "permissions": { "post": ["export:adapt"], "get": ["export:adapt"] },
+      "meta": {
+        "post": {
+          "summary": "Create an export zip of an Adapt course",
+          "responses": {
+            "200": {
+              "description": "The Adapt build data",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#components/schemas/adaptbuild" }
+                }
+              }
+            }
+          }
+        },
+        "get": {
+          "summary": "Retrieve an Adapt course export zip",
+          "responses": {
+            "200": {
+              "description": "Course build zip file",
+              "content": { "application/zip": {} }
+            }
+          }
+        }
+      }
+    },
+    {
+      "route": "/update",
+      "handlers": { "post": "postUpdateHandler", "get": "getUpdateHandler" },
+      "permissions": { "post": ["update:adapt"], "get": ["update:adapt"] },
+      "meta": {
+        "post": {
+          "summary": "Updates the installed framework",
+          "responses": {
+            "200": {
+              "description": "Describes the upgraded elements",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "properties": {
+                      "from": { "type": "string" },
+                      "to": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "get": {
+          "summary": "Retrieve framework update data",
+          "responses": {
+            "200": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "properties": {
+                      "canBeUpdated": { "type": "boolean" },
+                      "currentVersion": { "type": "string" },
+                      "latestCompatibleVersion": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
