@@ -155,15 +155,39 @@ describe('AdaptFrameworkImport', () => {
       return ctx
     }
 
+    function makeSchema (properties) {
+      return {
+        built: { properties },
+        walk (data, predicate, props, parentPath = '') {
+          props = props ?? this.built.properties
+          const matches = []
+          for (const [key, val] of Object.entries(props)) {
+            if (data[key] === undefined) continue
+            const currentPath = parentPath ? `${parentPath}/${key}` : key
+            if (val.properties) {
+              matches.push(...this.walk(data[key], predicate, val.properties, currentPath))
+            } else if (val?.items?.properties) {
+              data[key].forEach((item, i) => {
+                matches.push(...this.walk(item, predicate, val.items.properties, `${currentPath}/${i}`))
+              })
+            } else if (predicate(val)) {
+              matches.push({ path: currentPath, key, data, value: data[key] })
+            }
+          }
+          return matches
+        }
+      }
+    }
+
     it('should replace asset paths with mapped IDs', () => {
       const ctx = makeCtx({ 'course/en/assets/logo.png': 'asset123' })
-      const schema = {
+      const schema = makeSchema({
         _graphic: {
           properties: {
             src: { _backboneForms: 'Asset' }
           }
         }
-      }
+      })
       const data = { _graphic: { src: 'course/en/assets/logo.png' } }
       ctx.extractAssets(schema, data)
       assert.equal(data._graphic.src, 'asset123')
@@ -171,13 +195,13 @@ describe('AdaptFrameworkImport', () => {
 
     it('should delete empty string asset values', () => {
       const ctx = makeCtx({})
-      const schema = {
+      const schema = makeSchema({
         _graphic: {
           properties: {
             src: { _backboneForms: 'Asset' }
           }
         }
-      }
+      })
       const data = { _graphic: { src: '' } }
       ctx.extractAssets(schema, data)
       assert.equal('src' in data._graphic, false)
@@ -185,9 +209,9 @@ describe('AdaptFrameworkImport', () => {
 
     it('should keep value when not in assetMap', () => {
       const ctx = makeCtx({})
-      const schema = {
+      const schema = makeSchema({
         img: { _backboneForms: { type: 'Asset' } }
-      }
+      })
       const data = { img: 'unknown/path.png' }
       ctx.extractAssets(schema, data)
       assert.equal(data.img, 'unknown/path.png')
@@ -195,7 +219,7 @@ describe('AdaptFrameworkImport', () => {
 
     it('should recurse into nested properties', () => {
       const ctx = makeCtx({ 'assets/bg.jpg': 'asset456' })
-      const schema = {
+      const schema = makeSchema({
         _settings: {
           properties: {
             _background: {
@@ -205,7 +229,7 @@ describe('AdaptFrameworkImport', () => {
             }
           }
         }
-      }
+      })
       const data = { _settings: { _background: { src: 'assets/bg.jpg' } } }
       ctx.extractAssets(schema, data)
       assert.equal(data._settings._background.src, 'asset456')
@@ -213,7 +237,7 @@ describe('AdaptFrameworkImport', () => {
 
     it('should recurse into array items', () => {
       const ctx = makeCtx({ 'assets/a.png': 'id1', 'assets/b.png': 'id2' })
-      const schema = {
+      const schema = makeSchema({
         _items: {
           items: {
             properties: {
@@ -221,7 +245,7 @@ describe('AdaptFrameworkImport', () => {
             }
           }
         }
-      }
+      })
       const data = {
         _items: [
           { src: 'assets/a.png' },
@@ -235,9 +259,9 @@ describe('AdaptFrameworkImport', () => {
 
     it('should skip undefined data keys', () => {
       const ctx = makeCtx({})
-      const schema = {
+      const schema = makeSchema({
         _graphic: { _backboneForms: 'Asset' }
-      }
+      })
       const data = {}
       ctx.extractAssets(schema, data)
       assert.equal('_graphic' in data, false)
@@ -250,9 +274,9 @@ describe('AdaptFrameworkImport', () => {
 
     it('should handle _backboneForms as object with type', () => {
       const ctx = makeCtx({ 'path/img.png': 'mapped' })
-      const schema = {
+      const schema = makeSchema({
         hero: { _backboneForms: { type: 'Asset' } }
-      }
+      })
       const data = { hero: 'path/img.png' }
       ctx.extractAssets(schema, data)
       assert.equal(data.hero, 'mapped')
