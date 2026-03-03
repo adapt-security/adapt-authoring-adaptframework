@@ -148,10 +148,10 @@ describe('AdaptFrameworkImport', () => {
     })
   })
 
-  describe('#extractAssets()', () => {
+  describe('#resolveAssets()', () => {
     function makeCtx (assetMap) {
       const ctx = { assetMap }
-      ctx.extractAssets = AdaptFrameworkImport.prototype.extractAssets.bind(ctx)
+      ctx.resolveAssets = AdaptFrameworkImport.prototype.resolveAssets.bind(ctx)
       return ctx
     }
 
@@ -189,7 +189,7 @@ describe('AdaptFrameworkImport', () => {
         }
       })
       const data = { _graphic: { src: 'course/en/assets/logo.png' } }
-      ctx.extractAssets(schema, data)
+      ctx.resolveAssets(schema, data)
       assert.equal(data._graphic.src, 'asset123')
     })
 
@@ -203,7 +203,7 @@ describe('AdaptFrameworkImport', () => {
         }
       })
       const data = { _graphic: { src: '' } }
-      ctx.extractAssets(schema, data)
+      ctx.resolveAssets(schema, data)
       assert.equal('src' in data._graphic, false)
     })
 
@@ -213,7 +213,7 @@ describe('AdaptFrameworkImport', () => {
         img: { _backboneForms: { type: 'Asset' } }
       })
       const data = { img: 'unknown/path.png' }
-      ctx.extractAssets(schema, data)
+      ctx.resolveAssets(schema, data)
       assert.equal(data.img, 'unknown/path.png')
     })
 
@@ -231,7 +231,7 @@ describe('AdaptFrameworkImport', () => {
         }
       })
       const data = { _settings: { _background: { src: 'assets/bg.jpg' } } }
-      ctx.extractAssets(schema, data)
+      ctx.resolveAssets(schema, data)
       assert.equal(data._settings._background.src, 'asset456')
     })
 
@@ -252,7 +252,7 @@ describe('AdaptFrameworkImport', () => {
           { src: 'assets/b.png' }
         ]
       }
-      ctx.extractAssets(schema, data)
+      ctx.resolveAssets(schema, data)
       assert.equal(data._items[0].src, 'id1')
       assert.equal(data._items[1].src, 'id2')
     })
@@ -263,13 +263,13 @@ describe('AdaptFrameworkImport', () => {
         _graphic: { _backboneForms: 'Asset' }
       })
       const data = {}
-      ctx.extractAssets(schema, data)
+      ctx.resolveAssets(schema, data)
       assert.equal('_graphic' in data, false)
     })
 
     it('should handle null schema gracefully', () => {
       const ctx = makeCtx({})
-      ctx.extractAssets(null, { a: 1 })
+      ctx.resolveAssets(null, { a: 1 })
     })
 
     it('should handle _backboneForms as object with type', () => {
@@ -278,7 +278,7 @@ describe('AdaptFrameworkImport', () => {
         hero: { _backboneForms: { type: 'Asset' } }
       })
       const data = { hero: 'path/img.png' }
-      ctx.extractAssets(schema, data)
+      ctx.resolveAssets(schema, data)
       assert.equal(data.hero, 'mapped')
     })
   })
