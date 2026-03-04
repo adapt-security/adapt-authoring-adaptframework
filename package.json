@@ -32,7 +32,7 @@
   "peerDependencies": {
     "adapt-authoring-assets": "^1.4.3",
     "adapt-authoring-auth": "^2.0.0",
-    "adapt-authoring-jsonschema": "^1.1.5",
+    "adapt-authoring-jsonschema": "^1.4.0",
     "adapt-authoring-middleware": "^1.0.1",
     "adapt-authoring-server": "^2.1.0",
     "adapt-authoring-tags": "^1.0.1"
