@@ -1,5 +1,8 @@
 {
   "documentation": {
     "enable": true
+  },
+  "framework": {
+    "targetVersion": 5
   }
 }
