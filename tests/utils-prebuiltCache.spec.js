@@ -59,42 +59,79 @@ describe('prebuiltCache', () => {
   })
 
   describe('populateCache()', () => {
-    it('should copy shared and CSS artifacts to cache', async () => {
-      // Create mock build output
+    it('should cache all build entries except course/', async () => {
+      // Create mock build output matching actual grunt structure
       await fs.mkdir(path.join(buildDir, 'adapt', 'js'), { recursive: true })
       await fs.writeFile(path.join(buildDir, 'adapt', 'js', 'adapt.min.js'), 'js-content')
-      await fs.mkdir(path.join(buildDir, 'adapt', 'css'), { recursive: true })
-      await fs.writeFile(path.join(buildDir, 'adapt', 'css', 'adapt.css'), 'css-content')
-      await fs.writeFile(path.join(buildDir, 'index.html'), '<html>@@config._defaultLanguage</html>')
+      await fs.writeFile(path.join(buildDir, 'adapt.css'), 'css-content')
+      await fs.writeFile(path.join(buildDir, 'adapt.css.map'), 'map-content')
+      await fs.mkdir(path.join(buildDir, 'fonts'), { recursive: true })
+      await fs.writeFile(path.join(buildDir, 'fonts', 'icon.woff2'), 'font-data')
+      await fs.writeFile(path.join(buildDir, 'index.html'), '<html></html>')
+      await fs.writeFile(path.join(buildDir, 'templates.js'), 'templates')
+      await fs.mkdir(path.join(buildDir, 'assets'), { recursive: true })
+      await fs.writeFile(path.join(buildDir, 'assets', 'logo.png'), 'img')
+      await fs.mkdir(path.join(buildDir, 'libraries'), { recursive: true })
+      await fs.writeFile(path.join(buildDir, 'libraries', 'modernizr.js'), 'lib')
+      // Required files from plugins (e.g. spoortracking)
+      await fs.writeFile(path.join(buildDir, 'connection.txt'), '')
+      await fs.writeFile(path.join(buildDir, 'scorm_test_harness.html'), '<html></html>')
+      // course/ should be skipped
+      await fs.mkdir(path.join(buildDir, 'course', 'en'), { recursive: true })
+      await fs.writeFile(path.join(buildDir, 'course', 'en', 'course.json'), '{}')
 
       await populateCache(buildDir, cacheRoot, 'hash1', 'theme', 'menu')
 
       const { sharedDir, cssDir } = getCachePaths(cacheRoot, 'hash1', 'theme', 'menu')
+
+      // Shared artifacts
       const js = await fs.readFile(path.join(sharedDir, 'adapt', 'js', 'adapt.min.js'), 'utf8')
       assert.equal(js, 'js-content')
-      const css = await fs.readFile(path.join(cssDir, 'adapt', 'css', 'adapt.css'), 'utf8')
-      assert.equal(css, 'css-content')
       const html = await fs.readFile(path.join(sharedDir, 'index.html'), 'utf8')
-      assert.ok(html.includes('@@config._defaultLanguage'))
+      assert.equal(html, '<html></html>')
+      const conn = await fs.readFile(path.join(sharedDir, 'connection.txt'), 'utf8')
+      assert.equal(conn, '')
+      const harness = await fs.readFile(path.join(sharedDir, 'scorm_test_harness.html'), 'utf8')
+      assert.equal(harness, '<html></html>')
+
+      // CSS artifacts
+      const css = await fs.readFile(path.join(cssDir, 'adapt.css'), 'utf8')
+      assert.equal(css, 'css-content')
+      const cssMap = await fs.readFile(path.join(cssDir, 'adapt.css.map'), 'utf8')
+      assert.equal(cssMap, 'map-content')
+      const font = await fs.readFile(path.join(cssDir, 'fonts', 'icon.woff2'), 'utf8')
+      assert.equal(font, 'font-data')
+
+      // course/ should NOT be cached
+      await assert.rejects(fs.access(path.join(sharedDir, 'course')), { code: 'ENOENT' })
+      await assert.rejects(fs.access(path.join(cssDir, 'course')), { code: 'ENOENT' })
     })
   })
 
   describe('restoreFromCache()', () => {
     it('should copy cached artifacts to destination', async () => {
-      // Set up cache
+      // Set up cache matching actual structure
       const { sharedDir, cssDir } = getCachePaths(cacheRoot, 'hash1', 'theme', 'menu')
       await fs.mkdir(path.join(sharedDir, 'adapt', 'js'), { recursive: true })
       await fs.writeFile(path.join(sharedDir, 'adapt', 'js', 'adapt.min.js'), 'cached-js')
-      await fs.mkdir(path.join(cssDir, 'adapt', 'css'), { recursive: true })
-      await fs.writeFile(path.join(cssDir, 'adapt', 'css', 'adapt.css'), 'cached-css')
+      await fs.writeFile(path.join(sharedDir, 'index.html'), 'cached-html')
+      await fs.writeFile(path.join(sharedDir, 'connection.txt'), '')
+      await fs.mkdir(cssDir, { recursive: true })
+      await fs.writeFile(path.join(cssDir, 'adapt.css'), 'cached-css')
+      await fs.mkdir(path.join(cssDir, 'fonts'), { recursive: true })
+      await fs.writeFile(path.join(cssDir, 'fonts', 'icon.woff2'), 'cached-font')
 
       const destDir = path.join(tmpDir, 'restored')
       await restoreFromCache(cacheRoot, 'hash1', 'theme', 'menu', destDir)
 
       const js = await fs.readFile(path.join(destDir, 'adapt', 'js', 'adapt.min.js'), 'utf8')
       assert.equal(js, 'cached-js')
-      const css = await fs.readFile(path.join(destDir, 'adapt', 'css', 'adapt.css'), 'utf8')
+      const css = await fs.readFile(path.join(destDir, 'adapt.css'), 'utf8')
       assert.equal(css, 'cached-css')
+      const font = await fs.readFile(path.join(destDir, 'fonts', 'icon.woff2'), 'utf8')
+      assert.equal(font, 'cached-font')
+      const conn = await fs.readFile(path.join(destDir, 'connection.txt'), 'utf8')
+      assert.equal(conn, '')
     })
   })
 
