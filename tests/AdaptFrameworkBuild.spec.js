@@ -9,6 +9,34 @@ import AdaptFrameworkBuild from '../lib/AdaptFrameworkBuild.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
+// ── Helpers ──────────────────────────────────────────────────────────
+
+function createBuild (overrides = {}) {
+  return new AdaptFrameworkBuild({
+    action: 'preview', courseId: 'c1', userId: 'u1', ...overrides
+  })
+}
+
+function createEmptyCourseData () {
+  return {
+    course: { dir: '/tmp', fileName: 'course.json', data: undefined },
+    config: { dir: '/tmp', fileName: 'config.json', data: undefined },
+    contentObject: { dir: '/tmp', fileName: 'contentObjects.json', data: [] },
+    article: { dir: '/tmp', fileName: 'articles.json', data: [] },
+    block: { dir: '/tmp', fileName: 'blocks.json', data: [] },
+    component: { dir: '/tmp', fileName: 'components.json', data: [] }
+  }
+}
+
+function createTransformBuild (overrides = {}) {
+  const build = createBuild(overrides)
+  build.idMap = overrides.idMap || {}
+  build.assetData = overrides.assetData || { idMap: {} }
+  build.enabledPlugins = overrides.enabledPlugins || []
+  build.courseData = overrides.courseData || { course: { dir: '/tmp', data: {} } }
+  return build
+}
+
 /**
  * transformContentItems is async and calls App.instance.waitForModule('tags')
  * at the end. We extract the synchronous logic here to test it in isolation.
@@ -44,7 +72,7 @@ function transformContentItemsSync (build, items) {
 describe('AdaptFrameworkBuild', () => {
   describe('constructor', () => {
     it('should set action and related boolean flags for preview', () => {
-      const build = new AdaptFrameworkBuild({ action: 'preview', courseId: 'c1', userId: 'u1' })
+      const build = createBuild()
       assert.equal(build.action, 'preview')
       assert.equal(build.isPreview, true)
       assert.equal(build.isPublish, false)
@@ -52,64 +80,64 @@ describe('AdaptFrameworkBuild', () => {
     })
 
     it('should set action and related boolean flags for publish', () => {
-      const build = new AdaptFrameworkBuild({ action: 'publish', courseId: 'c1', userId: 'u1' })
+      const build = createBuild({ action: 'publish' })
       assert.equal(build.isPreview, false)
       assert.equal(build.isPublish, true)
       assert.equal(build.isExport, false)
     })
 
     it('should set action and related boolean flags for export', () => {
-      const build = new AdaptFrameworkBuild({ action: 'export', courseId: 'c1', userId: 'u1' })
+      const build = createBuild({ action: 'export' })
       assert.equal(build.isPreview, false)
       assert.equal(build.isPublish, false)
       assert.equal(build.isExport, true)
     })
 
     it('should default compress to false for preview', () => {
-      const build = new AdaptFrameworkBuild({ action: 'preview', courseId: 'c1', userId: 'u1' })
+      const build = createBuild()
       assert.equal(build.compress, false)
     })
 
     it('should default compress to true for publish', () => {
-      const build = new AdaptFrameworkBuild({ action: 'publish', courseId: 'c1', userId: 'u1' })
+      const build = createBuild({ action: 'publish' })
       assert.equal(build.compress, true)
     })
 
     it('should default compress to true for export', () => {
-      const build = new AdaptFrameworkBuild({ action: 'export', courseId: 'c1', userId: 'u1' })
+      const build = createBuild({ action: 'export' })
       assert.equal(build.compress, true)
     })
 
     it('should allow overriding compress', () => {
-      const build = new AdaptFrameworkBuild({ action: 'preview', courseId: 'c1', userId: 'u1', compress: true })
+      const build = createBuild({ compress: true })
       assert.equal(build.compress, true)
     })
 
     it('should set courseId and userId', () => {
-      const build = new AdaptFrameworkBuild({ action: 'preview', courseId: 'course123', userId: 'user456' })
+      const build = createBuild({ courseId: 'course123', userId: 'user456' })
       assert.equal(build.courseId, 'course123')
       assert.equal(build.userId, 'user456')
     })
 
     it('should set expiresAt when provided', () => {
       const expires = '2025-01-01T00:00:00.000Z'
-      const build = new AdaptFrameworkBuild({ action: 'preview', courseId: 'c1', userId: 'u1', expiresAt: expires })
+      const build = createBuild({ expiresAt: expires })
       assert.equal(build.expiresAt, expires)
     })
 
     it('should initialise courseData as empty object', () => {
-      const build = new AdaptFrameworkBuild({ action: 'preview', courseId: 'c1', userId: 'u1' })
+      const build = createBuild()
       assert.deepEqual(build.courseData, {})
     })
 
     it('should initialise enabledPlugins and disabledPlugins as empty arrays', () => {
-      const build = new AdaptFrameworkBuild({ action: 'preview', courseId: 'c1', userId: 'u1' })
+      const build = createBuild()
       assert.deepEqual(build.enabledPlugins, [])
       assert.deepEqual(build.disabledPlugins, [])
     })
 
     it('should set collectionName to "adaptbuilds"', () => {
-      const build = new AdaptFrameworkBuild({ action: 'preview', courseId: 'c1', userId: 'u1' })
+      const build = createBuild()
       assert.equal(build.collectionName, 'adaptbuilds')
     })
   })
@@ -136,7 +164,7 @@ describe('AdaptFrameworkBuild', () => {
 
   describe('#createIdMap()', () => {
     it('should create a mapping of _id to _friendlyId', () => {
-      const build = new AdaptFrameworkBuild({ action: 'preview', courseId: 'c1', userId: 'u1' })
+      const build = createBuild()
       const items = [
         { _id: 'abc', _friendlyId: 'friendly-abc' },
         { _id: 'def', _friendlyId: 'friendly-def' }
@@ -149,7 +177,7 @@ describe('AdaptFrameworkBuild', () => {
     })
 
     it('should handle items without _friendlyId', () => {
-      const build = new AdaptFrameworkBuild({ action: 'preview', courseId: 'c1', userId: 'u1' })
+      const build = createBuild()
       const items = [{ _id: 'abc' }]
       build.createIdMap(items)
       assert.equal(build.idMap.abc, undefined)
@@ -158,15 +186,8 @@ describe('AdaptFrameworkBuild', () => {
 
   describe('#sortContentItems()', () => {
     it('should sort content into correct types', () => {
-      const build = new AdaptFrameworkBuild({ action: 'preview', courseId: 'c1', userId: 'u1' })
-      build.courseData = {
-        course: { dir: '/tmp', fileName: 'course.json', data: undefined },
-        config: { dir: '/tmp', fileName: 'config.json', data: undefined },
-        contentObject: { dir: '/tmp', fileName: 'contentObjects.json', data: [] },
-        article: { dir: '/tmp', fileName: 'articles.json', data: [] },
-        block: { dir: '/tmp', fileName: 'blocks.json', data: [] },
-        component: { dir: '/tmp', fileName: 'components.json', data: [] }
-      }
+      const build = createBuild()
+      build.courseData = createEmptyCourseData()
       const items = [
         { _id: 'course1', _type: 'course' },
         { _id: 'config1', _type: 'config' },
@@ -186,15 +207,8 @@ describe('AdaptFrameworkBuild', () => {
     })
 
     it('should sort siblings by _sortOrder', () => {
-      const build = new AdaptFrameworkBuild({ action: 'preview', courseId: 'c1', userId: 'u1' })
-      build.courseData = {
-        course: { dir: '/tmp', fileName: 'course.json', data: undefined },
-        config: { dir: '/tmp', fileName: 'config.json', data: undefined },
-        contentObject: { dir: '/tmp', fileName: 'contentObjects.json', data: [] },
-        article: { dir: '/tmp', fileName: 'articles.json', data: [] },
-        block: { dir: '/tmp', fileName: 'blocks.json', data: [] },
-        component: { dir: '/tmp', fileName: 'components.json', data: [] }
-      }
+      const build = createBuild()
+      build.courseData = createEmptyCourseData()
       const items = [
         { _id: 'course1', _type: 'course' },
         { _id: 'page2', _type: 'page', _parentId: 'course1', _sortOrder: 2 },
@@ -209,15 +223,8 @@ describe('AdaptFrameworkBuild', () => {
     })
 
     it('should categorise "menu" type as contentObject', () => {
-      const build = new AdaptFrameworkBuild({ action: 'preview', courseId: 'c1', userId: 'u1' })
-      build.courseData = {
-        course: { dir: '/tmp', fileName: 'course.json', data: undefined },
-        config: { dir: '/tmp', fileName: 'config.json', data: undefined },
-        contentObject: { dir: '/tmp', fileName: 'contentObjects.json', data: [] },
-        article: { dir: '/tmp', fileName: 'articles.json', data: [] },
-        block: { dir: '/tmp', fileName: 'blocks.json', data: [] },
-        component: { dir: '/tmp', fileName: 'components.json', data: [] }
-      }
+      const build = createBuild()
+      build.courseData = createEmptyCourseData()
       const items = [
         { _id: 'course1', _type: 'course' },
         { _id: 'menu1', _type: 'menu', _parentId: 'course1', _sortOrder: 1 }
@@ -229,15 +236,8 @@ describe('AdaptFrameworkBuild', () => {
     })
 
     it('should sort deeply nested content in global order', () => {
-      const build = new AdaptFrameworkBuild({ action: 'preview', courseId: 'c1', userId: 'u1' })
-      build.courseData = {
-        course: { dir: '/tmp', fileName: 'course.json', data: undefined },
-        config: { dir: '/tmp', fileName: 'config.json', data: undefined },
-        contentObject: { dir: '/tmp', fileName: 'contentObjects.json', data: [] },
-        article: { dir: '/tmp', fileName: 'articles.json', data: [] },
-        block: { dir: '/tmp', fileName: 'blocks.json', data: [] },
-        component: { dir: '/tmp', fileName: 'components.json', data: [] }
-      }
+      const build = createBuild()
+      build.courseData = createEmptyCourseData()
       const items = [
         { _id: 'course1', _type: 'course' },
         { _id: 'page1', _type: 'page', _parentId: 'course1', _sortOrder: 1 },
@@ -257,101 +257,69 @@ describe('AdaptFrameworkBuild', () => {
 
   describe('#transformContentItems()', () => {
     it('should replace _courseId and _parentId with friendlyIds from idMap', () => {
-      const build = new AdaptFrameworkBuild({ action: 'preview', courseId: 'c1', userId: 'u1' })
-      build.idMap = { course1: 'co-friendly', page1: 'page-friendly' }
-      build.assetData = { idMap: {} }
-      build.enabledPlugins = []
-      build.courseData = { course: { dir: '/tmp', data: {} } }
-
-      const items = [
-        { _courseId: 'course1', _parentId: 'page1' }
-      ]
+      const build = createTransformBuild({
+        idMap: { course1: 'co-friendly', page1: 'page-friendly' }
+      })
+      const items = [{ _courseId: 'course1', _parentId: 'page1' }]
       transformContentItemsSync(build, items)
       assert.equal(items[0]._courseId, 'co-friendly')
       assert.equal(items[0]._parentId, 'page-friendly')
     })
 
     it('should replace _id with _friendlyId when present', () => {
-      const build = new AdaptFrameworkBuild({ action: 'preview', courseId: 'c1', userId: 'u1' })
-      build.idMap = {}
-      build.assetData = { idMap: {} }
-      build.enabledPlugins = []
-      build.courseData = { course: { dir: '/tmp', data: {} } }
-
+      const build = createTransformBuild()
       const items = [{ _id: 'abc', _friendlyId: 'my-friendly' }]
       transformContentItemsSync(build, items)
       assert.equal(items[0]._id, 'my-friendly')
     })
 
     it('should not replace _id when _friendlyId is absent', () => {
-      const build = new AdaptFrameworkBuild({ action: 'preview', courseId: 'c1', userId: 'u1' })
-      build.idMap = {}
-      build.assetData = { idMap: {} }
-      build.enabledPlugins = []
-      build.courseData = { course: { dir: '/tmp', data: {} } }
-
+      const build = createTransformBuild()
       const items = [{ _id: 'abc' }]
       transformContentItemsSync(build, items)
       assert.equal(items[0]._id, 'abc')
     })
 
     it('should replace asset _ids with relative paths', () => {
-      const build = new AdaptFrameworkBuild({ action: 'preview', courseId: 'c1', userId: 'u1' })
-      build.idMap = {}
+      const build = createTransformBuild({
+        assetData: { idMap: { asset123: '/build/course/assets/image.png' } }
+      })
       build.courseDir = '/build/course'
-      build.assetData = { idMap: { asset123: '/build/course/assets/image.png' } }
-      build.enabledPlugins = []
-      build.courseData = { course: { dir: '/tmp', data: {} } }
-
       const items = [{ graphic: 'asset123' }]
       transformContentItemsSync(build, items)
       assert.equal(items[0].graphic, 'course/assets/image.png')
     })
 
     it('should resolve _component to targetAttribute', () => {
-      const build = new AdaptFrameworkBuild({ action: 'preview', courseId: 'c1', userId: 'u1' })
-      build.idMap = {}
-      build.assetData = { idMap: {} }
-      build.enabledPlugins = [
-        { name: 'adapt-contrib-text', targetAttribute: '_text', type: 'component' }
-      ]
-      build.courseData = { course: { dir: '/tmp', data: {} } }
-
+      const build = createTransformBuild({
+        enabledPlugins: [
+          { name: 'adapt-contrib-text', targetAttribute: '_text', type: 'component' }
+        ]
+      })
       const items = [{ _component: 'adapt-contrib-text' }]
       transformContentItemsSync(build, items)
       assert.equal(items[0]._component, 'text')
     })
 
     it('should keep _component as-is when plugin not found', () => {
-      const build = new AdaptFrameworkBuild({ action: 'preview', courseId: 'c1', userId: 'u1' })
-      build.idMap = {}
-      build.assetData = { idMap: {} }
-      build.enabledPlugins = []
-      build.courseData = { course: { dir: '/tmp', data: {} } }
-
+      const build = createTransformBuild()
       const items = [{ _component: 'unknown-plugin' }]
       transformContentItemsSync(build, items)
       assert.equal(items[0]._component, 'unknown-plugin')
     })
 
     it('should move globals into nested _extensions object', () => {
-      const build = new AdaptFrameworkBuild({ action: 'preview', courseId: 'c1', userId: 'u1' })
-      build.idMap = {}
-      build.assetData = { idMap: {} }
-      build.enabledPlugins = [
-        { name: 'adapt-contrib-trickle', targetAttribute: '_trickle', type: 'extension' }
-      ]
-      build.courseData = {
-        course: {
-          dir: '/tmp',
-          data: {
-            _globals: {
-              _trickle: { label: 'Trickle' }
-            }
+      const build = createTransformBuild({
+        enabledPlugins: [
+          { name: 'adapt-contrib-trickle', targetAttribute: '_trickle', type: 'extension' }
+        ],
+        courseData: {
+          course: {
+            dir: '/tmp',
+            data: { _globals: { _trickle: { label: 'Trickle' } } }
           }
         }
-      }
-
+      })
       transformContentItemsSync(build, [])
       const globals = build.courseData.course.data._globals
       assert.equal(globals._extensions._trickle.label, 'Trickle')
@@ -359,35 +327,24 @@ describe('AdaptFrameworkBuild', () => {
     })
 
     it('should use _components key for component type globals', () => {
-      const build = new AdaptFrameworkBuild({ action: 'preview', courseId: 'c1', userId: 'u1' })
-      build.idMap = {}
-      build.assetData = { idMap: {} }
-      build.enabledPlugins = [
-        { name: 'adapt-contrib-text', targetAttribute: '_text', type: 'component' }
-      ]
-      build.courseData = {
-        course: {
-          dir: '/tmp',
-          data: {
-            _globals: {
-              _text: { ariaRegion: 'Text' }
-            }
+      const build = createTransformBuild({
+        enabledPlugins: [
+          { name: 'adapt-contrib-text', targetAttribute: '_text', type: 'component' }
+        ],
+        courseData: {
+          course: {
+            dir: '/tmp',
+            data: { _globals: { _text: { ariaRegion: 'Text' } } }
           }
         }
-      }
-
+      })
       transformContentItemsSync(build, [])
       const globals = build.courseData.course.data._globals
       assert.equal(globals._components._text.ariaRegion, 'Text')
     })
 
     it('should keep _courseId as-is when not in idMap', () => {
-      const build = new AdaptFrameworkBuild({ action: 'preview', courseId: 'c1', userId: 'u1' })
-      build.idMap = {}
-      build.assetData = { idMap: {} }
-      build.enabledPlugins = []
-      build.courseData = { course: { dir: '/tmp', data: {} } }
-
+      const build = createTransformBuild()
       const items = [{ _courseId: 'unmapped' }]
       transformContentItemsSync(build, items)
       assert.equal(items[0]._courseId, 'unmapped')
@@ -396,7 +353,7 @@ describe('AdaptFrameworkBuild', () => {
 
   describe('#writeContentJson() asset mapping', () => {
     it('should map asset data to export format for export builds', () => {
-      const build = new AdaptFrameworkBuild({ action: 'export', courseId: 'c1', userId: 'u1' })
+      const build = createBuild({ action: 'export' })
       build.assetData = {
         data: [
           { title: 'Logo', description: 'A logo', path: 'assets/logo.png', tags: ['branding'], _id: '123', url: '' },
@@ -418,7 +375,7 @@ describe('AdaptFrameworkBuild', () => {
     })
 
     it('should not include assets for export when assetData is empty', () => {
-      const build = new AdaptFrameworkBuild({ action: 'export', courseId: 'c1', userId: 'u1' })
+      const build = createBuild({ action: 'export' })
       build.assetData = { data: [] }
       build.courseData = {
         course: { dir: '/tmp', fileName: 'course.json', data: {} }
@@ -431,7 +388,7 @@ describe('AdaptFrameworkBuild', () => {
     })
 
     it('should include asset data entry for non-empty export', () => {
-      const build = new AdaptFrameworkBuild({ action: 'export', courseId: 'c1', userId: 'u1' })
+      const build = createBuild({ action: 'export' })
       build.assetData = { data: [{ title: 'img', path: 'a.png' }] }
       build.courseData = {
         course: { dir: '/tmp', fileName: 'course.json', data: {} }
