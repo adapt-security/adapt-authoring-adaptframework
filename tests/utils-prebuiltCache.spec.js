@@ -5,7 +5,7 @@ import path from 'node:path'
 import os from 'node:os'
 
 describe('prebuiltCache', () => {
-  let getCachePaths, hasCachedBuild, populateCache, restoreFromCache, invalidateCache
+  let getCachePaths, hasCachedBuild, hasSharedCache, populateCache, populateSharedCacheOnly, restoreFromCache, invalidateCache
   let tmpDir, cacheRoot, buildDir
 
   before(async () => {
@@ -17,7 +17,7 @@ describe('prebuiltCache', () => {
         logMemory: () => {}
       }
     })
-    ;({ getCachePaths, hasCachedBuild, populateCache, restoreFromCache, invalidateCache } = await import('../lib/utils/prebuiltCache.js'))
+    ;({ getCachePaths, hasCachedBuild, hasSharedCache, populateCache, populateSharedCacheOnly, restoreFromCache, invalidateCache } = await import('../lib/utils/prebuiltCache.js'))
   })
 
   beforeEach(async () => {
@@ -132,6 +132,47 @@ describe('prebuiltCache', () => {
       assert.equal(font, 'cached-font')
       const conn = await fs.readFile(path.join(destDir, 'connection.txt'), 'utf8')
       assert.equal(conn, '')
+    })
+  })
+
+  describe('hasSharedCache()', () => {
+    it('should return false when shared cache does not exist', async () => {
+      assert.equal(await hasSharedCache(cacheRoot, 'hash1'), false)
+    })
+
+    it('should return true when shared cache exists', async () => {
+      await fs.mkdir(path.join(cacheRoot, 'hash1'), { recursive: true })
+      assert.equal(await hasSharedCache(cacheRoot, 'hash1'), true)
+    })
+  })
+
+  describe('populateSharedCacheOnly()', () => {
+    it('should cache only shared entries, skipping CSS and course', async () => {
+      // Create mock build output
+      await fs.mkdir(path.join(buildDir, 'adapt', 'js'), { recursive: true })
+      await fs.writeFile(path.join(buildDir, 'adapt', 'js', 'adapt.min.js'), 'js')
+      await fs.writeFile(path.join(buildDir, 'index.html'), 'html')
+      await fs.writeFile(path.join(buildDir, 'connection.txt'), '')
+      // CSS entries — should be excluded
+      await fs.writeFile(path.join(buildDir, 'adapt.css'), 'css')
+      await fs.mkdir(path.join(buildDir, 'fonts'), { recursive: true })
+      await fs.writeFile(path.join(buildDir, 'fonts', 'icon.woff2'), 'font')
+      // course/ — should be excluded
+      await fs.mkdir(path.join(buildDir, 'course', 'en'), { recursive: true })
+      await fs.writeFile(path.join(buildDir, 'course', 'en', 'course.json'), '{}')
+
+      await populateSharedCacheOnly(buildDir, cacheRoot, 'hash1')
+
+      const sharedDir = path.join(cacheRoot, 'hash1')
+      // Shared entries present
+      assert.equal(await fs.readFile(path.join(sharedDir, 'adapt', 'js', 'adapt.min.js'), 'utf8'), 'js')
+      assert.equal(await fs.readFile(path.join(sharedDir, 'index.html'), 'utf8'), 'html')
+      assert.equal(await fs.readFile(path.join(sharedDir, 'connection.txt'), 'utf8'), '')
+      // CSS entries absent
+      await assert.rejects(fs.access(path.join(sharedDir, 'adapt.css')), { code: 'ENOENT' })
+      await assert.rejects(fs.access(path.join(sharedDir, 'fonts')), { code: 'ENOENT' })
+      // course/ absent
+      await assert.rejects(fs.access(path.join(sharedDir, 'course')), { code: 'ENOENT' })
     })
   })
 
