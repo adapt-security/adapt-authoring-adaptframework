@@ -133,5 +133,14 @@
     },
     "description": "Plugin is missing a dependency",
     "statusCode": 500
+  },
+  "FW_VERSION_NOT_ALLOWED": {
+    "data": {
+      "version": "The version that is not allowed",
+      "targetMajorVersion": "The allowed major version number",
+      "allowedRange": "The allowed semver range"
+    },
+    "description": "Framework version is outside the allowed major version",
+    "statusCode": 400
   }
 }
