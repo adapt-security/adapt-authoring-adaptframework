@@ -416,7 +416,7 @@ describe('AdaptFrameworkImport', () => {
       const uninstalled = []
       const ctx = makeRollbackCtx({
         contentplugin: {
-          uninstallPlugin: async (id) => uninstalled.push(id)
+          delete: async ({ _id }) => uninstalled.push(_id)
         },
         newContentPlugins: {
           'adapt-contrib-text': { _id: 'p1', name: 'adapt-contrib-text' },
@@ -515,9 +515,9 @@ describe('AdaptFrameworkImport', () => {
       const uninstalled = []
       const ctx = makeRollbackCtx({
         contentplugin: {
-          uninstallPlugin: async (id) => {
-            if (id === 'p1') throw new Error('uninstall failed')
-            uninstalled.push(id)
+          delete: async ({ _id }) => {
+            if (_id === 'p1') throw new Error('uninstall failed')
+            uninstalled.push(_id)
           }
         },
         newContentPlugins: {
