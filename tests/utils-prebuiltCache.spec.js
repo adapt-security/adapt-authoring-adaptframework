@@ -2,6 +2,7 @@ import { before, describe, it, beforeEach, afterEach, mock } from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import upath from 'upath'
 import os from 'node:os'
 
 describe('prebuiltCache', () => {
@@ -34,8 +35,8 @@ describe('prebuiltCache', () => {
   describe('getCachePaths()', () => {
     it('should return correct shared and CSS directory paths', () => {
       const result = getCachePaths('/cache', 'abc123', 'vanilla', 'boxMenu')
-      assert.equal(result.sharedDir, path.join('/cache', 'abc123'))
-      assert.equal(result.cssDir, path.join('/cache', 'abc123_vanilla_boxMenu'))
+      assert.equal(result.sharedDir, upath.join('/cache', 'abc123'))
+      assert.equal(result.cssDir, upath.join('/cache', 'abc123_vanilla_boxMenu'))
     })
   })
 

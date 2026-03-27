@@ -112,13 +112,6 @@
     "description": "Update of the framework failed",
     "statusCode": 500
   },
-  "FW_UPDATE_MIGRATION_FAILED": {
-    "data": {
-      "errors": "Array of per-course migration errors"
-    },
-    "description": "Content migration after framework or plugin update encountered errors",
-    "statusCode": 500
-  },
   "FW_INVALID_VERSION": {
     "data": {
       "name": "Incompatible plugin name",
