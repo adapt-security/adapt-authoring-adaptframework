@@ -19,7 +19,6 @@
     "adapt-authoring-spoortracking": "^1.0.2",
     "adapt-cli": "^3.3.3",
     "adapt-migrations": "^1.4.0",
-    "adapt-octopus": "^0.1.2",
     "bytes": "^3.1.2",
     "fs-extra": "11.3.3",
     "glob": "^13.0.0",
