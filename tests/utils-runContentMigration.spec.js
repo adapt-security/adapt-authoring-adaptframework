@@ -1,5 +1,10 @@
 import { describe, it, mock } from 'node:test'
 import assert from 'node:assert/strict'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+
+const testCachePath = fs.mkdtempSync(path.join(os.tmpdir(), 'runContentMigration-test-'))
 
 const mockLoad = mock.fn(async () => {})
 const mockMigrate = mock.fn(async ({ journal }) => {
@@ -39,7 +44,8 @@ describe('runContentMigration()', () => {
       content: [{ _id: 'c1', title: 'old' }],
       fromPlugins: [{ name: 'core', version: '1.0.0' }],
       toPlugins: [{ name: 'core', version: '2.0.0' }],
-      scripts
+      scripts,
+      cachePath: testCachePath
     })
     assert.equal(mockLoad.mock.calls.length, 1)
     assert.deepEqual(mockLoad.mock.calls[0].arguments[0].scripts, scripts)
@@ -51,7 +57,8 @@ describe('runContentMigration()', () => {
       content: [{ _id: 'c1', title: 'old' }],
       fromPlugins: [{ name: 'core', version: '1.0.0' }],
       toPlugins: [{ name: 'core', version: '2.0.0' }],
-      scripts: []
+      scripts: [],
+      cachePath: testCachePath
     })
     assert.equal(mockMigrate.mock.calls.length, 1)
     const journal = mockMigrate.mock.calls[0].arguments[0].journal
@@ -70,7 +77,8 @@ describe('runContentMigration()', () => {
       content: [{ _id: 'c1', title: 'old' }],
       fromPlugins: [{ name: 'core', version: '1.0.0' }],
       toPlugins: [{ name: 'core', version: '2.0.0' }],
-      scripts: []
+      scripts: [],
+      cachePath: testCachePath
     })
     assert.equal(result[0].title, 'migrated')
   })
@@ -83,7 +91,8 @@ describe('runContentMigration()', () => {
       content: [{ _id: 'c1' }],
       fromPlugins,
       toPlugins: [{ name: 'core', version: '2.0.0' }],
-      scripts: []
+      scripts: [],
+      cachePath: testCachePath
     })
     const journal = mockMigrate.mock.calls[0].arguments[0].journal
     assert.deepEqual(journal.data.originalFromPlugins, fromPlugins)
