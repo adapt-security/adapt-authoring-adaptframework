@@ -5,9 +5,9 @@ import path from 'node:path'
 import upath from 'upath'
 import os from 'node:os'
 
-describe('prebuiltCache', () => {
-  let getCachePath, hasCachedBuild, populateCache, restoreFromCache, invalidateCache
-  let tmpDir, cacheRoot, buildDir
+describe('BuildCache', () => {
+  let BuildCache
+  let tmpDir, cacheRoot, buildDir, cache
 
   before(async () => {
     mock.module('../lib/utils/log.js', {
@@ -17,7 +17,7 @@ describe('prebuiltCache', () => {
         logMemory: () => {}
       }
     })
-    ;({ getCachePath, hasCachedBuild, populateCache, restoreFromCache, invalidateCache } = await import('../lib/utils/prebuiltCache.js'))
+    ;({ default: BuildCache } = await import('../lib/BuildCache.js'))
   })
 
   beforeEach(async () => {
@@ -25,31 +25,31 @@ describe('prebuiltCache', () => {
     cacheRoot = path.join(tmpDir, 'prebuilt-cache')
     buildDir = path.join(tmpDir, 'build')
     await fs.mkdir(buildDir, { recursive: true })
+    cache = new BuildCache(cacheRoot)
   })
 
   afterEach(async () => {
     await fs.rm(tmpDir, { recursive: true, force: true })
   })
 
-  describe('getCachePath()', () => {
+  describe('getPath()', () => {
     it('returns one combo-keyed directory path', () => {
-      const result = getCachePath('/cache', 'abc123', 'vanilla', 'boxMenu')
-      assert.equal(result, upath.join('/cache', 'abc123_vanilla_boxMenu'))
+      assert.equal(cache.getPath('abc123', 'vanilla', 'boxMenu'), upath.join(cacheRoot, 'abc123_vanilla_boxMenu'))
     })
   })
 
-  describe('hasCachedBuild()', () => {
+  describe('has()', () => {
     it('returns false when cache does not exist', async () => {
-      assert.equal(await hasCachedBuild(cacheRoot, 'hash1', 'theme', 'menu'), false)
+      assert.equal(await cache.has('hash1', 'theme', 'menu'), false)
     })
 
     it('returns true when the combo dir exists', async () => {
-      await fs.mkdir(getCachePath(cacheRoot, 'hash1', 'theme', 'menu'), { recursive: true })
-      assert.equal(await hasCachedBuild(cacheRoot, 'hash1', 'theme', 'menu'), true)
+      await fs.mkdir(cache.getPath('hash1', 'theme', 'menu'), { recursive: true })
+      assert.equal(await cache.has('hash1', 'theme', 'menu'), true)
     })
   })
 
-  describe('populateCache()', () => {
+  describe('populate()', () => {
     it('caches all build entries except course/', async () => {
       await fs.mkdir(path.join(buildDir, 'adapt', 'js'), { recursive: true })
       await fs.writeFile(path.join(buildDir, 'adapt', 'js', 'adapt.min.js'), 'js-content')
@@ -65,9 +65,9 @@ describe('prebuiltCache', () => {
       await fs.mkdir(path.join(buildDir, 'course', 'en'), { recursive: true })
       await fs.writeFile(path.join(buildDir, 'course', 'en', 'course.json'), '{}')
 
-      await populateCache(buildDir, cacheRoot, 'hash1', 'theme', 'menu')
+      await cache.populate(buildDir, 'hash1', 'theme', 'menu')
 
-      const cacheDir = getCachePath(cacheRoot, 'hash1', 'theme', 'menu')
+      const cacheDir = cache.getPath('hash1', 'theme', 'menu')
       assert.equal(await fs.readFile(path.join(cacheDir, 'adapt', 'js', 'adapt.min.js'), 'utf8'), 'js-content')
       assert.equal(await fs.readFile(path.join(cacheDir, 'index.html'), 'utf8'), '<html></html>')
       assert.equal(await fs.readFile(path.join(cacheDir, 'adapt.css'), 'utf8'), 'css-content')
@@ -76,31 +76,32 @@ describe('prebuiltCache', () => {
     })
   })
 
-  describe('restoreFromCache()', () => {
+  describe('restore()', () => {
     it('copies cached artifacts to destination', async () => {
-      const cacheDir = getCachePath(cacheRoot, 'hash1', 'theme', 'menu')
+      const cacheDir = cache.getPath('hash1', 'theme', 'menu')
       await fs.mkdir(path.join(cacheDir, 'adapt', 'js'), { recursive: true })
       await fs.writeFile(path.join(cacheDir, 'adapt', 'js', 'adapt.min.js'), 'cached-js')
       await fs.writeFile(path.join(cacheDir, 'adapt.css'), 'cached-css')
 
       const destDir = path.join(tmpDir, 'restored')
-      await restoreFromCache(cacheRoot, 'hash1', 'theme', 'menu', destDir)
+      await cache.restore('hash1', 'theme', 'menu', destDir)
 
       assert.equal(await fs.readFile(path.join(destDir, 'adapt', 'js', 'adapt.min.js'), 'utf8'), 'cached-js')
       assert.equal(await fs.readFile(path.join(destDir, 'adapt.css'), 'utf8'), 'cached-css')
     })
   })
 
-  describe('invalidateCache()', () => {
+  describe('invalidate()', () => {
     it('removes the cache directory', async () => {
       await fs.mkdir(cacheRoot, { recursive: true })
       await fs.writeFile(path.join(cacheRoot, 'test'), 'data')
-      await invalidateCache(cacheRoot)
+      await cache.invalidate()
       await assert.rejects(fs.access(cacheRoot), { code: 'ENOENT' })
     })
 
     it('does not throw when cache does not exist', async () => {
-      await assert.doesNotReject(invalidateCache(path.join(tmpDir, 'nonexistent')))
+      const missing = new BuildCache(path.join(tmpDir, 'nonexistent'))
+      await assert.doesNotReject(missing.invalidate())
     })
   })
 })
