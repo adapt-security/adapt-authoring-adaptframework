@@ -32,6 +32,11 @@
       "description": "URL of the Adapt framework git repository to install",
       "type": "string"
     },
+    "prebuildCache": {
+      "description": "When enabled, eagerly rebuilds the prebuilt cache for every (theme, menu) combination in the background after invalidation (e.g. plugin install/update/delete)",
+      "type": "boolean",
+      "default": false
+    },
     "importMaxFileSize": {
       "description": "Maximum file upload size for course imports",
       "type": "string",
