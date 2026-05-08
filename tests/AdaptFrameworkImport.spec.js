@@ -150,7 +150,7 @@ describe('AdaptFrameworkImport', () => {
 
   describe('#resolveAssets()', () => {
     function makeCtx (assetMap) {
-      const ctx = { assetMap }
+      const ctx = { assetMap, statusReport: { warn: [] } }
       ctx.resolveAssets = AdaptFrameworkImport.prototype.resolveAssets.bind(ctx)
       return ctx
     }
@@ -207,14 +207,17 @@ describe('AdaptFrameworkImport', () => {
       assert.equal('src' in data._graphic, false)
     })
 
-    it('should keep value when not in assetMap', () => {
+    it('should drop unresolved asset refs and surface them in statusReport.warn', () => {
       const ctx = makeCtx({})
       const schema = makeSchema({
         img: { _backboneForms: { type: 'Asset' } }
       })
       const data = { img: 'unknown/path.png' }
       ctx.resolveAssets(schema, data)
-      assert.equal(data.img, 'unknown/path.png')
+      assert.equal('img' in data, false)
+      assert.equal(ctx.statusReport.warn.length, 1)
+      assert.equal(ctx.statusReport.warn[0].code, 'UNRESOLVED_ASSET_REF')
+      assert.equal(ctx.statusReport.warn[0].data.path, 'unknown/path.png')
     })
 
     it('should recurse into nested properties', () => {
@@ -407,7 +410,6 @@ describe('AdaptFrameworkImport', () => {
         contentplugin: null,
         assets: null,
         content: null,
-        courseassets: null,
         ...overrides
       }
     }
@@ -442,22 +444,17 @@ describe('AdaptFrameworkImport', () => {
       assert.deepEqual(deleted.sort(), ['a1', 'a2'])
     })
 
-    it('should delete course content and course assets', async () => {
+    it('should delete course content on rollback', async () => {
       const contentDeleted = []
-      const courseAssetsDeleted = []
       const ctx = makeRollbackCtx({
         content: {
           deleteMany: async (query) => contentDeleted.push(query)
-        },
-        courseassets: {
-          deleteMany: async (query) => courseAssetsDeleted.push(query)
         },
         contentJson: { course: { _id: 'oldCourseId' } },
         idMap: { oldCourseId: '507f1f77bcf86cd799439011' }
       })
       await rollback.call(ctx)
       assert.equal(contentDeleted.length, 1)
-      assert.equal(courseAssetsDeleted.length, 1)
     })
 
     it('should skip plugin uninstall when contentplugin is not available', async () => {
@@ -480,9 +477,6 @@ describe('AdaptFrameworkImport', () => {
       const deleted = []
       const ctx = makeRollbackCtx({
         content: {
-          deleteMany: async (query) => deleted.push(query)
-        },
-        courseassets: {
           deleteMany: async (query) => deleted.push(query)
         },
         contentJson: { course: { _id: 'oldCourseId' } },
