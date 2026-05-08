@@ -150,7 +150,7 @@ describe('AdaptFrameworkImport', () => {
 
   describe('#resolveAssets()', () => {
     function makeCtx (assetMap) {
-      const ctx = { assetMap }
+      const ctx = { assetMap, statusReport: { warn: [] } }
       ctx.resolveAssets = AdaptFrameworkImport.prototype.resolveAssets.bind(ctx)
       return ctx
     }
@@ -207,14 +207,17 @@ describe('AdaptFrameworkImport', () => {
       assert.equal('src' in data._graphic, false)
     })
 
-    it('should keep value when not in assetMap', () => {
+    it('should drop unresolved asset refs and surface them in statusReport.warn', () => {
       const ctx = makeCtx({})
       const schema = makeSchema({
         img: { _backboneForms: { type: 'Asset' } }
       })
       const data = { img: 'unknown/path.png' }
       ctx.resolveAssets(schema, data)
-      assert.equal(data.img, 'unknown/path.png')
+      assert.equal('img' in data, false)
+      assert.equal(ctx.statusReport.warn.length, 1)
+      assert.equal(ctx.statusReport.warn[0].code, 'UNRESOLVED_ASSET_REF')
+      assert.equal(ctx.statusReport.warn[0].data.path, 'unknown/path.png')
     })
 
     it('should recurse into nested properties', () => {
