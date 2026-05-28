@@ -404,6 +404,7 @@ describe('AdaptFrameworkImport', () => {
         newContentPlugins: {},
         updatedContentPlugins: {},
         assetMap: {},
+        newAssetIds: [],
         newTagIds: [],
         contentJson: { course: {} },
         idMap: {},
@@ -438,10 +439,27 @@ describe('AdaptFrameworkImport', () => {
         assetMap: {
           'course/en/assets/logo.png': 'a1',
           'course/en/assets/bg.jpg': 'a2'
-        }
+        },
+        newAssetIds: ['a1', 'a2']
       })
       await rollback.call(ctx)
       assert.deepEqual(deleted.sort(), ['a1', 'a2'])
+    })
+
+    it('should not delete de-duplicated assets that point to pre-existing records', async () => {
+      const deleted = []
+      const ctx = makeRollbackCtx({
+        assets: {
+          delete: async ({ _id }) => deleted.push(_id)
+        },
+        assetMap: {
+          'course/en/assets/new.png': 'a1',
+          'course/en/assets/existing.png': 'a2-existing'
+        },
+        newAssetIds: ['a1']
+      })
+      await rollback.call(ctx)
+      assert.deepEqual(deleted, ['a1'])
     })
 
     it('should delete course content on rollback', async () => {
@@ -499,7 +517,8 @@ describe('AdaptFrameworkImport', () => {
           'path/a.png': 'a1',
           'path/b.png': 'a2',
           'path/c.png': 'a3'
-        }
+        },
+        newAssetIds: ['a1', 'a2', 'a3']
       })
       await rollback.call(ctx)
       assert.deepEqual(deleted.sort(), ['a2', 'a3'])
