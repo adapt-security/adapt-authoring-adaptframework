@@ -34,18 +34,29 @@ describe('BuildCache', () => {
 
   describe('getPath()', () => {
     it('returns one combo-keyed directory path', () => {
-      assert.equal(cache.getPath('abc123', 'vanilla', 'boxMenu'), upath.join(cacheRoot, 'abc123_vanilla_boxMenu'))
+      assert.equal(cache.getPath('abc123', 'vanilla', 'boxMenu', 'vhash'), upath.join(cacheRoot, 'abc123_vanilla_boxMenu_vhash'))
+    })
+
+    it('returns distinct paths for different varsHash', () => {
+      const a = cache.getPath('abc123', 'vanilla', 'boxMenu', 'aaa')
+      const b = cache.getPath('abc123', 'vanilla', 'boxMenu', 'bbb')
+      assert.notEqual(a, b)
     })
   })
 
   describe('has()', () => {
     it('returns false when cache does not exist', async () => {
-      assert.equal(await cache.has('hash1', 'theme', 'menu'), false)
+      assert.equal(await cache.has('hash1', 'theme', 'menu', 'vhash'), false)
     })
 
     it('returns true when the combo dir exists', async () => {
-      await fs.mkdir(cache.getPath('hash1', 'theme', 'menu'), { recursive: true })
-      assert.equal(await cache.has('hash1', 'theme', 'menu'), true)
+      await fs.mkdir(cache.getPath('hash1', 'theme', 'menu', 'vhash'), { recursive: true })
+      assert.equal(await cache.has('hash1', 'theme', 'menu', 'vhash'), true)
+    })
+
+    it('returns false when only a different varsHash exists', async () => {
+      await fs.mkdir(cache.getPath('hash1', 'theme', 'menu', 'vhashA'), { recursive: true })
+      assert.equal(await cache.has('hash1', 'theme', 'menu', 'vhashB'), false)
     })
   })
 
@@ -65,9 +76,9 @@ describe('BuildCache', () => {
       await fs.mkdir(path.join(buildDir, 'course', 'en'), { recursive: true })
       await fs.writeFile(path.join(buildDir, 'course', 'en', 'course.json'), '{}')
 
-      await cache.populate(buildDir, 'hash1', 'theme', 'menu')
+      await cache.populate(buildDir, 'hash1', 'theme', 'menu', 'vhash')
 
-      const cacheDir = cache.getPath('hash1', 'theme', 'menu')
+      const cacheDir = cache.getPath('hash1', 'theme', 'menu', 'vhash')
       assert.equal(await fs.readFile(path.join(cacheDir, 'adapt', 'js', 'adapt.min.js'), 'utf8'), 'js-content')
       assert.equal(await fs.readFile(path.join(cacheDir, 'index.html'), 'utf8'), '<html></html>')
       assert.equal(await fs.readFile(path.join(cacheDir, 'adapt.css'), 'utf8'), 'css-content')
@@ -78,13 +89,13 @@ describe('BuildCache', () => {
 
   describe('restore()', () => {
     it('copies cached artifacts to destination', async () => {
-      const cacheDir = cache.getPath('hash1', 'theme', 'menu')
+      const cacheDir = cache.getPath('hash1', 'theme', 'menu', 'vhash')
       await fs.mkdir(path.join(cacheDir, 'adapt', 'js'), { recursive: true })
       await fs.writeFile(path.join(cacheDir, 'adapt', 'js', 'adapt.min.js'), 'cached-js')
       await fs.writeFile(path.join(cacheDir, 'adapt.css'), 'cached-css')
 
       const destDir = path.join(tmpDir, 'restored')
-      await cache.restore('hash1', 'theme', 'menu', destDir)
+      await cache.restore('hash1', 'theme', 'menu', 'vhash', destDir)
 
       assert.equal(await fs.readFile(path.join(destDir, 'adapt', 'js', 'adapt.min.js'), 'utf8'), 'cached-js')
       assert.equal(await fs.readFile(path.join(destDir, 'adapt.css'), 'utf8'), 'cached-css')
