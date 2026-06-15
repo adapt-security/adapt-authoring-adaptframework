@@ -19,6 +19,24 @@ describe('applyContentAccessFilter()', () => {
     ])
   })
 
+  it('should add a group-sharing grant when the user has groups', () => {
+    const query = { _type: 'course' }
+    applyContentAccessFilter(query, 'user1', ['g1', 'g2'])
+    assert.deepEqual(query.$or, [
+      { createdBy: 'user1' },
+      { _isShared: true },
+      { _shareWithUsers: 'user1' },
+      { userGroups: { $in: ['g1', 'g2'] } }
+    ])
+  })
+
+  it('should not add a group grant when the user has no groups', () => {
+    const query = { _type: 'course' }
+    applyContentAccessFilter(query, 'user1', [])
+    assert.equal(query.$or.length, 3)
+    assert.ok(!query.$or.some(c => c.userGroups))
+  })
+
   it('should preserve an existing $or by lifting both into $and', () => {
     const query = { $or: [{ title: 'foo' }] }
     applyContentAccessFilter(query, 'user1')
