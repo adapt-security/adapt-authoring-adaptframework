@@ -1,6 +1,9 @@
 {
   "documentation": {
-    "enable": true
+    "enable": true,
+    "manualPages": {
+      "building-courses.md": "development"
+    }
   },
   "framework": {
     "targetVersion": 5
