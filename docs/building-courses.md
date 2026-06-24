@@ -180,6 +180,35 @@ deep clone), so an observer can:
 `postBuildHook` fires after the output (and zip) is in place but before the response, with
 the same instance — `builder.location` is then populated.
 
+## Extension point: `importProgressHook`
+
+`AdaptFrameworkModule` exposes `importProgressHook`, invoked repeatedly while a course
+imports so consumers can surface progress. It is **transport-agnostic** — the framework
+emits plain progress objects and never depends on any particular delivery mechanism;
+relaying them (e.g. over a websocket) is the consumer's job. The module wires it to fire
+from inside `AdaptFrameworkImport`; observers receive the live importer and a progress
+object:
+
+```javascript
+const framework = await this.app.waitForModule('adaptframework')
+
+framework.importProgressHook.tap((importer, progress) => {
+  // importer.importToken — the opaque correlation id passed to POST /import
+  // progress.phase       — the current phase key (e.g. 'importCourseAssets')
+  // progress.step / progress.totalSteps — phase position in the run
+  // progress.current / progress.total   — per-item count within a heavy phase
+})
+```
+
+Two kinds of event are emitted: a **phase** event (`{ phase, step, totalSteps }`) before
+each enabled phase runs, and **per-item** events (`{ phase, current, total }`) within the
+heavy phases (`importCourseAssets`, `importCourseData`). Observers should treat the payload
+as additive — not every event carries every field.
+
+`importToken` is an opaque correlation id: pass it in the `POST /import` body and read it
+off the importer here to attribute progress to a specific import (e.g. to pick a websocket
+room). It has no meaning to the framework itself.
+
 ## Configuration
 
 From `conf/config.schema.json`, namespaced `adapt-authoring-adaptframework.*`:
