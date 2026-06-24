@@ -68,7 +68,8 @@
                     "isDryRun": { "type": "Boolean", "default": false },
                     "importContent": { "type": "Boolean", "default": true },
                     "importPlugins": { "type": "Boolean", "default": true },
-                    "updatePlugins": { "type": "Boolean", "default": false }
+                    "updatePlugins": { "type": "Boolean", "default": false },
+                    "importToken": { "type": "String" }
                   }
                 }
               }
