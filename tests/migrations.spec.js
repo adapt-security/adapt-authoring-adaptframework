@@ -336,6 +336,68 @@ describe('Migrations', () => {
       await StartPage(data, importer)
       assert.equal(data._start._startIds[0]._id, 'start_page_1')
     })
+
+    it('should fall back to the only page when a start id is missing in a single-page course', async () => {
+      const logFn = mock.fn()
+      const data = {
+        _type: 'course',
+        _start: { _startIds: [{ _id: 'missing' }] }
+      }
+      const importer = {
+        contentJson: {
+          contentObjects: {
+            'co-1': { _id: 'co-1', _type: 'page', _friendlyId: 'p-1' }
+          }
+        },
+        framework: { log: logFn }
+      }
+      await StartPage(data, importer)
+      // start id rewritten to the single page's friendlyId; _start kept
+      assert.ok(data._start)
+      assert.equal(data._start._startIds[0]._id, 'p-1')
+      assert.equal(logFn.mock.calls.length, 1)
+      assert.equal(logFn.mock.calls[0].arguments[0], 'warn')
+    })
+
+    it('should assign a generated friendlyId when falling back to a single page without one', async () => {
+      const data = {
+        _type: 'course',
+        _start: { _startIds: [{ _id: 'missing' }] }
+      }
+      const importer = {
+        contentJson: {
+          contentObjects: {
+            'co-1': { _id: 'co-1', _type: 'page' }
+          }
+        },
+        framework: { log: mock.fn() }
+      }
+      await StartPage(data, importer)
+      assert.equal(importer.contentJson.contentObjects['co-1']._friendlyId, 'start_page_1')
+      assert.equal(data._start._startIds[0]._id, 'start_page_1')
+    })
+
+    it('should remove _start config when a start id is missing and there is not exactly one page', async () => {
+      const logFn = mock.fn()
+      const data = {
+        _type: 'course',
+        _start: { _startIds: [{ _id: 'missing' }] }
+      }
+      const importer = {
+        contentJson: {
+          contentObjects: {
+            'co-1': { _id: 'co-1', _type: 'page', _friendlyId: 'p-1' },
+            'co-2': { _id: 'co-2', _type: 'page', _friendlyId: 'p-2' }
+          }
+        },
+        framework: { log: logFn }
+      }
+      await StartPage(data, importer)
+      // can't safely choose a start page → drop _start so the menu loads
+      assert.equal(data._start, undefined)
+      assert.equal(logFn.mock.calls.length, 1)
+      assert.equal(logFn.mock.calls[0].arguments[0], 'warn')
+    })
   })
 
   describe('ThemeUndef', () => {
