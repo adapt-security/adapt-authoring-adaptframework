@@ -83,6 +83,41 @@ describe('runContentMigration()', () => {
     assert.equal(result[0].title, 'migrated')
   })
 
+  it('should throw when adapt-migrations logs an error during migrate (swallowed step failure)', async () => {
+    mockMigrate.mock.resetCalls()
+    mockMigrate.mock.mockImplementation(async ({ journal, logger }) => {
+      // simulate adapt-migrations swallowing a failed step: it logs and rolls
+      // back rather than throwing
+      logger.error('Task -- shouldContinue errored Error: boom')
+    })
+    await assert.rejects(
+      runContentMigration({
+        content: [{ _id: 'c1', title: 'old' }],
+        fromPlugins: [{ name: 'core', version: '1.0.0' }],
+        toPlugins: [{ name: 'core', version: '2.0.0' }],
+        scripts: [],
+        cachePath: testCachePath
+      }),
+      /reported 1 error\(s\) during migration.*shouldContinue errored/s
+    )
+  })
+
+  it('should not throw when migrate logs no errors', async () => {
+    mockMigrate.mock.resetCalls()
+    mockMigrate.mock.mockImplementation(async ({ journal, logger }) => {
+      logger.info('Summary of changes')
+    })
+    await assert.doesNotReject(
+      runContentMigration({
+        content: [{ _id: 'c1', title: 'old' }],
+        fromPlugins: [{ name: 'core', version: '1.0.0' }],
+        toPlugins: [{ name: 'core', version: '2.0.0' }],
+        scripts: [],
+        cachePath: testCachePath
+      })
+    )
+  })
+
   it('should deep-clone fromPlugins into originalFromPlugins', async () => {
     mockMigrate.mock.resetCalls()
     mockMigrate.mock.mockImplementation(async () => {})
