@@ -1,5 +1,8 @@
 import { describe, it, mock } from 'node:test'
 import assert from 'node:assert/strict'
+import fs from 'fs/promises'
+import os from 'os'
+import path from 'path'
 
 // Prevent log() from triggering App.instance boot during tests
 mock.module('../lib/utils/log.js', {
@@ -622,6 +625,23 @@ describe('AdaptFrameworkImport', () => {
       await importCoursePlugins.call(ctx)
       assert.equal(ctx.statusReport.error.length, 1)
       assert.deepEqual(ctx.statusReport.error[0].data, ['adapt-contrib-missing'])
+    })
+  })
+
+  describe('#loadAssetData()', () => {
+    it('should find assets when the course path contains glob-significant characters', async () => {
+      // interpolating the path into the pattern would parse '[id]' as a char class (and '\' as an escape on Windows)
+      const langPath = await fs.mkdtemp(path.join(os.tmpdir(), 'af-import[id]-'))
+      try {
+        await fs.mkdir(path.join(langPath, 'assets'))
+        await fs.writeFile(path.join(langPath, 'assets', 'logo.png'), '')
+        const ctx = { langPath, tags: [], assetData: [] }
+        await AdaptFrameworkImport.prototype.loadAssetData.call(ctx)
+        assert.equal(ctx.assetData.length, 1)
+        assert.equal(ctx.assetData[0].title, 'logo.png')
+      } finally {
+        await fs.rm(langPath, { recursive: true, force: true })
+      }
     })
   })
 })
