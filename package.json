@@ -25,7 +25,7 @@
     "lodash": "^4.17.21",
     "semver": "^7.6.0",
     "upath": "^2.0.1",
-    "zipper": "github:adapt-security/zipper#v1.1.0"
+    "@adapt-security/zipper": "^1.2.0"
   },
   "peerDependencies": {
     "adapt-authoring-assets": "^1.4.3",
