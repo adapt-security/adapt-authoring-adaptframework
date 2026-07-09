@@ -14,8 +14,8 @@ describe('applyContentAccessFilter()', () => {
     applyContentAccessFilter(query, 'user1')
     assert.deepEqual(query.$or, [
       { createdBy: 'user1' },
-      { _isShared: true },
-      { _shareWithUsers: 'user1' }
+      { '_access.public': true },
+      { '_access.users': 'user1' }
     ])
   })
 
@@ -24,9 +24,9 @@ describe('applyContentAccessFilter()', () => {
     applyContentAccessFilter(query, 'user1', ['g1', 'g2'])
     assert.deepEqual(query.$or, [
       { createdBy: 'user1' },
-      { _isShared: true },
-      { _shareWithUsers: 'user1' },
-      { userGroups: { $in: ['g1', 'g2'] } }
+      { '_access.public': true },
+      { '_access.users': 'user1' },
+      { '_access.groups': { $in: ['g1', 'g2'] } }
     ])
   })
 
@@ -34,7 +34,7 @@ describe('applyContentAccessFilter()', () => {
     const query = { _type: 'course' }
     applyContentAccessFilter(query, 'user1', [])
     assert.equal(query.$or.length, 3)
-    assert.ok(!query.$or.some(c => c.userGroups))
+    assert.ok(!query.$or.some(c => c['_access.groups']))
   })
 
   it('should preserve an existing $or by lifting both into $and', () => {
@@ -46,8 +46,8 @@ describe('applyContentAccessFilter()', () => {
       {
         $or: [
           { createdBy: 'user1' },
-          { _isShared: true },
-          { _shareWithUsers: 'user1' }
+          { '_access.public': true },
+          { '_access.users': 'user1' }
         ]
       }
     ])
