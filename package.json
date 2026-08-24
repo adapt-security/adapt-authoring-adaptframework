@@ -20,7 +20,7 @@
     "adapt-cli": "^3.3.3",
     "adapt-migrations": "^1.4.0",
     "bytes": "^3.1.2",
-    "fs-extra": "11.3.3",
+    "fs-extra": "11.4.0",
     "glob": "^13.0.0",
     "lodash": "^4.17.21",
     "semver": "^7.6.0",
